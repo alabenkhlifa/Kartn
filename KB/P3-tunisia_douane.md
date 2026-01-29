@@ -212,7 +212,7 @@ Step 7: FINAL PRICE = CIF + TOTAL TAXES + Fees
 | Tax benefit              | **25% of total taxes due**            |
 | Cylinder limit (Essence) | ≤ 2000 cm³                            |
 | Cylinder limit (Diesel)  | ≤ 2500 cm³                            |
-| Vehicle age              | ≤ 3 years (cars), ≤ 5 years (utility) |
+| Vehicle age              | ≤ 5 years (cars), ≤ 5 years (utility) |
 | Payment                  | Full upfront or échelonné (4 years)   |
 
 ### Regime 2: FCR Famille Résidente (Article 55 - 2026) - ONE-TIME
@@ -223,8 +223,8 @@ Step 7: FINAL PRICE = CIF + TOTAL TAXES + Fees
 | One-time                 | Yes (once per family, ever)                  |
 | DC benefit               | **10%** (instead of 38-88%)                  |
 | TVA                      | **7%** (instead of 19%)                      |
-| Cylinder limit (Essence) | ≤ 1600 cm³                                   |
-| Cylinder limit (Diesel)  | ≤ 1900 cm³                                   |
+| Cylinder limit (Essence) | ≤ 1400 cm³                                   |
+| Cylinder limit (Diesel)  | ≤ 1700 cm³                                   |
 | Vehicle age              | ≤ 8 years                                    |
 | Income limit             | ≤ 10× SMIG (individual), ≤ 14× SMIG (couple) |
 | Restriction              | Cannot sell for 5 years                      |
