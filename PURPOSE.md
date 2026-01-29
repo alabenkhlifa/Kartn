@@ -94,35 +94,29 @@ GitHub Actions (Scraping) → Public JSON/CSV → Supabase Edge Functions → Po
 
 ---
 
-## Phase 2: Knowledge Base Setup
+## Phase 2: Knowledge Base Setup ✓
 
 ### 2.1 Document Processing
 
-- [ ] Chunk 14+ knowledge documents (500-800 tokens each)
-- [ ] Preserve metadata (source, section, topic)
-- [ ] Categories:
+- [x] Chunk 17 knowledge documents (500-800 tokens each)
+- [x] Preserve metadata (source, section, subsection, topic)
+- [x] Categories:
     - FCR eligibility rules
     - Tax calculation procedures
     - Financing options
     - EV incentives (2026 law)
     - Parts availability guidelines
+    - Import procedures
+    - Insurance
+    - Market info
 
 ### 2.2 Vector Storage
 
-- [ ] Enable pgvector extension in Supabase
-- [ ] Create `knowledge_chunks` table:
-  ```sql
-  CREATE TABLE knowledge_chunks (
-    id SERIAL PRIMARY KEY,
-    content TEXT,
-    source VARCHAR(255),
-    section VARCHAR(255),
-    embedding VECTOR(384),  -- MiniLM dimension
-    created_at TIMESTAMP DEFAULT NOW()
-  );
-  ```
-- [ ] Create similarity search function
-- [ ] Generate and store embeddings for all chunks
+- [x] Enable pgvector extension in Supabase
+- [x] Create `knowledge_chunks` table with IVFFlat index
+- [x] Create `match_knowledge_chunks()` similarity search function
+- [x] Create Edge Function `ingest-knowledge` for embedding generation
+- [x] HuggingFace API integration (paraphrase-multilingual-MiniLM-L12-v2)
 
 ---
 
