@@ -353,3 +353,55 @@ def estimate_final_price(cif, engine_cc, fuel_type, regime, is_electric, is_phev
 | Medium thermal (1500-1700cc) | **~60-80%** of CIF         |
 | Large thermal (>2000cc)      | **~100-170%** of CIF       |
 | 4x4 any size                 | **~150-200%** of CIF       |
+
+---
+
+## Quick Reference Formulas
+
+### Standard Import Duties (Without FCR)
+
+```
+Base: CIF Value (Car + Shipping + Insurance)
+
+Duties typically include:
+- Customs duty: 10-43% (varies by origin)
+- Consumption tax: 10-88% (based on engine)
+- TVA: 19%
+- Other fees: stamps, homologation
+
+Total can reach: 150-250% of car value
+```
+
+### FCR Renouvelable Calculation
+
+```
+Franchise Totale (RS): 0 TND
+Franchise Partielle:
+  - 25% × normal_duties (small engine)
+  - 30% × normal_duties (large engine)
+```
+
+### "Une Voiture pour Chaque Famille" Calculation
+
+```
+Consumption tax: 10% × CIF value
+TVA: 7% × (CIF + consumption tax)
+Total: ~17-18% vs ~200% normal
+```
+
+---
+
+## Tools & Calculators
+
+| Tool                      | URL                                                       | Notes                |
+|---------------------------|-----------------------------------------------------------|----------------------|
+| Douane Taxation Simulator | https://www.douane.gov.tn/taxationveh/                    | Official calculator  |
+| Vignette Payment          | https://taxe-circulation.finances.gov.tn                  | Annual road tax      |
+| Third-party calculator    | https://autotaxe.com                                      | Community tool       |
+| Automobile.tn Guide       | https://www.automobile.tn/fr/guide/droits-de-douanes.html | Comprehensive guide  |
+
+### Chatbot Features to Build
+
+- [ ] Build calculator in chatbot
+- [ ] Get exact duty rates by car origin (EU, Asia, etc.)
+- [ ] Currency conversion (EUR/TND rate)
