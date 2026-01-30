@@ -6,15 +6,16 @@ import { Goal, Residency, FuelPreference, CarTypePreference, ConditionPreference
  */
 export function parseGoal(input: string): Goal | null {
   const trimmed = input.trim().toLowerCase();
+  const firstChar = trimmed.charAt(0);
 
   // Numeric selection
-  if (trimmed === '1' || trimmed.includes('trouver') || trimmed.includes('cherche') || trimmed.includes('voiture')) {
+  if (firstChar === '1' || trimmed.includes('trouver') || trimmed.includes('cherche') || trimmed.includes('voiture')) {
     return 'find_car';
   }
-  if (trimmed === '2' || trimmed.includes('calcul') || trimmed.includes('coût') || trimmed.includes('prix')) {
+  if (firstChar === '2' || trimmed.includes('calcul') || trimmed.includes('coût') || trimmed.includes('prix')) {
     return 'calculate_cost';
   }
-  if (trimmed === '3' || trimmed.includes('procédure') || trimmed.includes('comment') || trimmed.includes('étape')) {
+  if (firstChar === '3' || trimmed.includes('procédure') || trimmed.includes('comment') || trimmed.includes('étape')) {
     return 'procedure';
   }
 
@@ -27,12 +28,13 @@ export function parseGoal(input: string): Goal | null {
  */
 export function parseResidency(input: string): Residency | null {
   const trimmed = input.trim().toLowerCase();
+  const firstChar = trimmed.charAt(0);
 
   // Numeric selection
-  if (trimmed === '1' || trimmed.includes('tunisie') || trimmed.includes('local')) {
+  if (firstChar === '1' || trimmed.includes('tunisie') || trimmed.includes('local')) {
     return 'local';
   }
-  if (trimmed === '2' || trimmed.includes('étranger') || trimmed.includes('tre') || trimmed.includes('abroad')) {
+  if (firstChar === '2' || trimmed.includes('étranger') || trimmed.includes('tre') || trimmed.includes('abroad')) {
     return 'abroad';
   }
 
@@ -45,12 +47,13 @@ export function parseResidency(input: string): Residency | null {
  */
 export function parseBudget(input: string): number | null {
   const trimmed = input.trim().toLowerCase();
+  const firstChar = trimmed.charAt(0);
 
   // Preset selections
-  if (trimmed === '1') return 50000;
-  if (trimmed === '2') return 70000;
-  if (trimmed === '3') return 90000;
-  if (trimmed === '4') return 120000;
+  if (firstChar === '1') return 50000;
+  if (firstChar === '2') return 70000;
+  if (firstChar === '3') return 90000;
+  if (firstChar === '4') return 120000;
 
   // Parse numeric value
   // Remove spaces, handle "k" suffix
@@ -104,14 +107,15 @@ export function isReset(input: string): boolean {
  */
 export function parseFcrFamille(input: string): boolean | null {
   const trimmed = input.trim().toLowerCase();
+  const firstChar = trimmed.charAt(0);
 
   // Yes responses
-  if (trimmed === '1' || trimmed === 'oui' || trimmed === 'نعم' || trimmed === 'إيه' || trimmed === 'yes') {
+  if (firstChar === '1' || trimmed === 'oui' || trimmed === 'نعم' || trimmed === 'إيه' || trimmed === 'yes') {
     return true;
   }
 
   // No responses
-  if (trimmed === '2' || trimmed === 'non' || trimmed === 'لا' || trimmed === 'no') {
+  if (firstChar === '2' || trimmed === 'non' || trimmed === 'لا' || trimmed === 'no') {
     return false;
   }
 
@@ -124,14 +128,15 @@ export function parseFcrFamille(input: string): boolean | null {
  */
 export function parseFuelType(input: string): FuelPreference | null {
   const trimmed = input.trim().toLowerCase();
+  const firstChar = trimmed.charAt(0);
 
   // Check for numbered options first
-  if (trimmed === '1') return 'essence';
-  if (trimmed === '2') return 'diesel';
-  if (trimmed === '3') return 'hybrid';
-  if (trimmed === '4') return 'hybrid_rechargeable';
-  if (trimmed === '5') return 'electric';
-  if (trimmed === '6') return 'any';
+  if (firstChar === '1') return 'essence';
+  if (firstChar === '2') return 'diesel';
+  if (firstChar === '3') return 'hybrid';
+  if (firstChar === '4') return 'hybrid_rechargeable';
+  if (firstChar === '5') return 'electric';
+  if (firstChar === '6') return 'any';
 
   // Keyword matching
   if (trimmed.includes('essence') || trimmed.includes('بنزين') || trimmed.includes('petrol') || trimmed.includes('gasoline')) {
@@ -164,16 +169,19 @@ export function parseFuelType(input: string): FuelPreference | null {
 export function parseCarType(input: string): CarTypePreference | null {
   const trimmed = input.trim().toLowerCase();
 
-  if (trimmed === '1' || trimmed.includes('suv') || trimmed.includes('4x4')) {
+  // Extract first character for numeric options (handles "1 (suv)", "1.", "option 1" etc.)
+  const firstChar = trimmed.charAt(0);
+
+  if (firstChar === '1' || trimmed.includes('suv') || trimmed.includes('4x4')) {
     return 'suv';
   }
-  if (trimmed === '2' || trimmed.includes('berline') || trimmed.includes('sedan') || trimmed.includes('سيدان') || trimmed.includes('برلين')) {
+  if (firstChar === '2' || trimmed.includes('berline') || trimmed.includes('sedan') || trimmed.includes('سيدان') || trimmed.includes('برلين')) {
     return 'sedan';
   }
-  if (trimmed === '3' || trimmed.includes('compact') || trimmed.includes('مدمجة') || trimmed.includes('صغيرة')) {
+  if (firstChar === '3' || trimmed.includes('compact') || trimmed.includes('مدمجة') || trimmed.includes('صغيرة')) {
     return 'compact';
   }
-  if (trimmed === '4' || trimmed.includes('importe') || trimmed.includes('يهم') || trimmed.includes('any') || trimmed.includes('all')) {
+  if (firstChar === '4' || trimmed.includes('importe') || trimmed.includes('يهم') || trimmed.includes('any') || trimmed.includes('all')) {
     return 'any';
   }
 
@@ -186,17 +194,18 @@ export function parseCarType(input: string): CarTypePreference | null {
  */
 export function parseCondition(input: string): ConditionPreference | null {
   const trimmed = input.trim().toLowerCase();
+  const firstChar = trimmed.charAt(0);
 
   // New
-  if (trimmed === '1' || trimmed.includes('neuve') || trimmed.includes('new') || trimmed.includes('جديدة') || trimmed === 'neuf') {
+  if (firstChar === '1' || trimmed.includes('neuve') || trimmed.includes('new') || trimmed.includes('جديدة') || trimmed === 'neuf') {
     return 'new';
   }
   // Used
-  if (trimmed === '2' || trimmed.includes('occasion') || trimmed.includes('used') || trimmed.includes('مستعملة') || trimmed.includes('occ')) {
+  if (firstChar === '2' || trimmed.includes('occasion') || trimmed.includes('used') || trimmed.includes('مستعملة') || trimmed.includes('occ')) {
     return 'used';
   }
   // Any
-  if (trimmed === '3' || trimmed.includes('importe') || trimmed.includes('يهم') || trimmed.includes('any') || trimmed.includes('all') || trimmed.includes('both')) {
+  if (firstChar === '3' || trimmed.includes('importe') || trimmed.includes('يهم') || trimmed.includes('any') || trimmed.includes('all') || trimmed.includes('both')) {
     return 'any';
   }
 
