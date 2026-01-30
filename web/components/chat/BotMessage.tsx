@@ -5,6 +5,7 @@ import { Message, ParsedOption } from '@/types';
 import { parseNumberedOptions, extractMainMessage } from '@/lib/parser';
 import SuggestionButtons from '@/components/suggestions/SuggestionButtons';
 import CarList from '@/components/cars/CarList';
+import MarkdownContent from '@/components/markdown/MarkdownContent';
 
 interface BotMessageProps {
   message: Message;
@@ -42,9 +43,7 @@ export default function BotMessage({
       {/* Message Content */}
       <div className="flex-1">
         <div className="bg-bg-secondary rounded-2xl rounded-tl-sm px-4 py-3 border border-white/10">
-          <p className="text-[15px] text-text-primary whitespace-pre-wrap leading-relaxed">
-            {displayContent}
-          </p>
+          <MarkdownContent content={displayContent} />
 
           {/* Suggestion Buttons - Only show for latest message */}
           {isLatest && options.length > 0 && (

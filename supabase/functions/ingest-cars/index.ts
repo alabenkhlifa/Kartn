@@ -89,9 +89,21 @@ Deno.serve(async (req) => {
 
         console.log(`Parsed ${records.length} records from ${sourceKey}`);
 
-        // Batch upsert
+        // Delete existing records for this source before inserting new data
+        const { error: deleteError } = await supabase
+          .from('cars')
+          .delete()
+          .eq('source', config.source);
+
+        if (deleteError) {
+          console.error(`Error deleting old records for ${sourceKey}:`, deleteError);
+          throw new Error(`Failed to delete old records: ${deleteError.message}`);
+        }
+
+        console.log(`Deleted existing records for source: ${config.source}`);
+
+        // Batch insert
         let inserted = 0;
-        let updated = 0;
         let errors = 0;
 
         for (let i = 0; i < records.length; i += BATCH_SIZE) {
@@ -99,29 +111,25 @@ Deno.serve(async (req) => {
 
           const { data, error } = await supabase
             .from('cars')
-            .upsert(batch, {
-              onConflict: 'source,url',
-              ignoreDuplicates: false,
-            })
+            .insert(batch)
             .select('id');
 
           if (error) {
             console.error(`Batch error for ${sourceKey}:`, error);
             errors += batch.length;
           } else {
-            // Count inserts vs updates (approximation - upsert doesn't distinguish)
             inserted += data?.length || 0;
           }
         }
 
-        results[sourceKey] = { inserted, updated, errors };
-        totalProcessed += inserted + updated;
+        results[sourceKey] = { inserted, errors };
+        totalProcessed += inserted;
         totalErrors += errors;
 
         console.log(`Completed ${sourceKey}: ${inserted} inserted, ${errors} errors`);
       } catch (error) {
         console.error(`Failed to process ${sourceKey}:`, error);
-        results[sourceKey] = { inserted: 0, updated: 0, errors: 1 };
+        results[sourceKey] = { inserted: 0, errors: 1 };
         totalErrors++;
       }
     }

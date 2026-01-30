@@ -108,7 +108,6 @@ export interface IngestRequest {
 
 export interface SourceResult {
   inserted: number;
-  updated: number;
   errors: number;
 }
 
