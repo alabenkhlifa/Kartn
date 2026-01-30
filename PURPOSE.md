@@ -125,13 +125,17 @@ GitHub Actions (Scraping) → Public JSON/CSV → Supabase Edge Functions → Po
 ### 3.1 Chat Endpoint (Supabase Edge Function)
 
 - [ ] Create Edge Function `chat`
+- [ ] System prompt with:
+    - **Topic restrictions**: Only respond to car purchasing, importing, FCR, taxes, financing, government programs, EV incentives, insurance, registration, running costs
+    - **Language mirroring**: Respond in user's language (French, Arabic, or Derja)
+    - **Off-topic handling**: Politely redirect to in-scope topics
 - [ ] Flow:
     1. Receive user query
     2. Generate query embedding (HuggingFace API)
     3. Vector search on `knowledge_chunks`
     4. SQL query on `cars` table (if vehicle search needed)
     5. Construct prompt with retrieved context
-    6. Call Groq API
+    6. Call Groq API (Llama 3.3 70B)
     7. Return response
 
 ### 3.2 Query Classification
