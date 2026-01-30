@@ -94,70 +94,77 @@ GitHub Actions (Scraping) → Public JSON/CSV → Supabase Edge Functions → Po
 
 ---
 
-## Phase 2: Knowledge Base Setup
+## Phase 2: Knowledge Base Setup ✓
 
 ### 2.1 Document Processing
 
-- [ ] Chunk 14+ knowledge documents (500-800 tokens each)
-- [ ] Preserve metadata (source, section, topic)
-- [ ] Categories:
+- [x] Chunk 17 knowledge documents (500-800 tokens each)
+- [x] Preserve metadata (source, section, subsection, topic)
+- [x] Categories:
     - FCR eligibility rules
     - Tax calculation procedures
     - Financing options
     - EV incentives (2026 law)
     - Parts availability guidelines
+    - Import procedures
+    - Insurance
+    - Market info
 
 ### 2.2 Vector Storage
 
-- [ ] Enable pgvector extension in Supabase
-- [ ] Create `knowledge_chunks` table:
-  ```sql
-  CREATE TABLE knowledge_chunks (
-    id SERIAL PRIMARY KEY,
-    content TEXT,
-    source VARCHAR(255),
-    section VARCHAR(255),
-    embedding VECTOR(384),  -- MiniLM dimension
-    created_at TIMESTAMP DEFAULT NOW()
-  );
-  ```
-- [ ] Create similarity search function
-- [ ] Generate and store embeddings for all chunks
+- [x] Enable pgvector extension in Supabase
+- [x] Create `knowledge_chunks` table with IVFFlat index
+- [x] Create `match_knowledge_chunks()` similarity search function
+- [x] Create Edge Function `ingest-knowledge` for embedding generation
+- [x] HuggingFace API integration (paraphrase-multilingual-MiniLM-L12-v2)
 
 ---
 
-## Phase 3: Orchestration Layer
+## Phase 3: Orchestration Layer ✓
 
 ### 3.1 Chat Endpoint (Supabase Edge Function)
 
-- [ ] Create Edge Function `chat`
-- [ ] Flow:
+- [x] Create Edge Function `chat`
+- [x] System prompt with:
+    - **Topic restrictions**: Only respond to car purchasing, importing, FCR, taxes, financing, government programs, EV incentives, insurance, registration, running costs
+    - **Language mirroring**: Respond in user's language (French, Arabic, or Derja)
+    - **Off-topic handling**: Politely redirect to in-scope topics
+- [x] Flow:
     1. Receive user query
     2. Generate query embedding (HuggingFace API)
     3. Vector search on `knowledge_chunks`
     4. SQL query on `cars` table (if vehicle search needed)
     5. Construct prompt with retrieved context
-    6. Call Groq API
+    6. Call Groq API (Llama 3.3 70B)
     7. Return response
 
-### 3.2 Query Classification
+### 3.2 Query Classification (Two-Stage LLM)
 
-- [ ] Detect intent: eligibility check, car search, cost calculation, general info
-- [ ] Route to appropriate retrieval strategy:
-    - Eligibility → Knowledge base only
-    - Car search → SQL + Knowledge base
-    - Cost calculation → Deterministic engine + Knowledge base
+- [x] **Stage 1: Fast Classification** (Llama 3.1 8B via Groq)
+    - Detect intent: `eligibility`, `car_search`, `cost_calculation`, `general_info`, `off_topic`
+    - Detect language: `french`, `arabic`, `derja`
+    - Extract filters (budget, fuel type, year, etc.) if car search
+- [x] **Stage 2: Route to retrieval strategy**
+    - `off_topic` → Return polite redirect (skip retrieval + generation)
+    - `eligibility` → Knowledge base only
+    - `car_search` → SQL + Knowledge base
+    - `cost_calculation` → Calculation engine + Knowledge base
+    - `general_info` → Knowledge base only
 - **Mixed Query Handling**: Multi-step pipeline approach
     1. Extract eligibility info from query
     2. Search cars based on filters
-    3. Combine results for LLM response
+    3. Combine results for LLM response (Llama 3.3 70B)
 
-### 3.3 Calculation Engine
+### 3.3 Calculation Engine (Hybrid: LLM + Deterministic Functions)
 
-- [ ] Implement tax calculation logic (5-layer structure)
-- [ ] EUR-to-TND conversion with buffer
-- [ ] FCR savings calculator
-- [ ] Total cost of ownership estimator
+- [x] **Tax calculator function** - 5-layer structure (DD → DC → TVA → TFD → fees)
+    - Rates from KB: `customs-taxes.md`
+    - Inputs: CIF, engine_cc, fuel_type, regime, vehicle_type (EV/PHEV/HEV/thermal)
+    - Output: Breakdown + total in TND
+- [x] **EUR-to-TND converter** - Live rate with configurable buffer (default 5%)
+- [x] **FCR savings calculator** - Compare regime options (TRE vs Famille vs Commun)
+- [x] **LLM tool calling** - Groq function calling to invoke calculators when needed
+    - LLM recognizes calculation intent → calls function → returns accurate result
 
 ---
 
