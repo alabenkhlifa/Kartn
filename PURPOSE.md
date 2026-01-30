@@ -155,12 +155,16 @@ GitHub Actions (Scraping) → Public JSON/CSV → Supabase Edge Functions → Po
     2. Search cars based on filters
     3. Combine results for LLM response (Llama 3.3 70B)
 
-### 3.3 Calculation Engine
+### 3.3 Calculation Engine (Hybrid: LLM + Deterministic Functions)
 
-- [ ] Implement tax calculation logic (5-layer structure)
-- [ ] EUR-to-TND conversion with buffer
-- [ ] FCR savings calculator
-- [ ] Total cost of ownership estimator
+- [ ] **Tax calculator function** - 5-layer structure (DD → DC → TVA → TFD → fees)
+    - Rates from KB: `customs-taxes.md`
+    - Inputs: CIF, engine_cc, fuel_type, regime, vehicle_type (EV/PHEV/HEV/thermal)
+    - Output: Breakdown + total in TND
+- [ ] **EUR-to-TND converter** - Live rate with configurable buffer (default 5%)
+- [ ] **FCR savings calculator** - Compare regime options (TRE vs Famille vs Commun)
+- [ ] **LLM tool calling** - Groq function calling to invoke calculators when needed
+    - LLM recognizes calculation intent → calls function → returns accurate result
 
 ---
 
