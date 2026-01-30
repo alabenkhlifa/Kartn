@@ -62,7 +62,7 @@ export async function searchCars(
       `
       id, brand, model, variant, year,
       price_eur, price_tnd, fuel_type, engine_cc,
-      mileage_km, body_type, condition, country, url,
+      mileage_km, body_type, country, url,
       fcr_tre_eligible, fcr_famille_eligible
     `
     )
@@ -98,14 +98,14 @@ export async function searchCars(
     query = query.in('body_type', bodyValues);
   }
 
-  // Condition filter (new vs used)
+  // Condition filter (new vs used) - based on mileage since there's no condition column
   if (filters.condition) {
     if (filters.condition === 'new') {
-      // New cars: mileage = 0 or condition = 'new'
-      query = query.or('mileage_km.eq.0,condition.eq.new');
+      // New cars have 0 mileage or null mileage
+      query = query.or('mileage_km.eq.0,mileage_km.is.null');
     } else if (filters.condition === 'used') {
-      // Used cars: mileage > 0 or condition = 'used'
-      query = query.or('mileage_km.gt.0,condition.eq.used');
+      // Used cars have mileage > 0
+      query = query.gt('mileage_km', 0);
     }
   }
 

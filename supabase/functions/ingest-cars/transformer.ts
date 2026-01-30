@@ -100,6 +100,22 @@ function generateId(source: string, url: string): string {
 /**
  * Compute FCR eligibility based on Tunisian import regulations
  * FCR only applies to imported cars - local TN cars are NOT eligible
+ *
+ * FCR TRE (fcr-renouvelable.md):
+ * - Age: ≤5 years
+ * - Electric: always eligible
+ * - PHEV (hybrid_rechargeable): always eligible (no cylinder limit per 2026 law)
+ * - Hybrid HEV: essence ≤2000cc (follows petrol limits)
+ * - Essence: ≤2000cc
+ * - Diesel: ≤2500cc
+ *
+ * FCR Famille (une-voiture-famille.md):
+ * - Age: ≤8 years
+ * - Electric: always eligible
+ * - PHEV: always eligible (no cylinder limit)
+ * - Hybrid HEV: essence ≤1700cc (per ev-hybrid-laws.md)
+ * - Essence: ≤1400cc
+ * - Diesel: ≤1700cc
  */
 function computeFcrEligibility(car: {
   year: number;
@@ -115,20 +131,33 @@ function computeFcrEligibility(car: {
     return { fcr_tre_eligible: false, fcr_famille_eligible: false, age_years: age };
   }
 
-  // FCR TRE: ≤5 years, essence ≤2000cc, diesel ≤2500cc, EV always ok
+  // FCR TRE: ≤5 years
+  // - Electric: always eligible
+  // - PHEV: always eligible (no cylinder limit per 2026 law)
+  // - Hybrid HEV: essence ≤2000cc (follows petrol limits)
+  // - Essence: ≤2000cc
+  // - Diesel: ≤2500cc
   const fcrTre =
     car.fuel_type === 'electric' ||
+    car.fuel_type === 'hybrid_rechargeable' ||
     (age <= 5 &&
       ((car.fuel_type === 'essence' && (car.engine_cc || 0) <= 2000) ||
-        (car.fuel_type === 'diesel' && (car.engine_cc || 0) <= 2500)));
+        (car.fuel_type === 'diesel' && (car.engine_cc || 0) <= 2500) ||
+        (car.fuel_type === 'hybrid' && (car.engine_cc || 0) <= 2000)));
 
-  // FCR Famille (Article 55): ≤8 years, essence ≤1400cc, diesel ≤1700cc, EV/PHEV always ok
+  // FCR Famille (Article 55): ≤8 years
+  // - Electric: always eligible
+  // - PHEV: always eligible (no cylinder limit)
+  // - Hybrid HEV: essence ≤1700cc (per ev-hybrid-laws.md)
+  // - Essence: ≤1400cc
+  // - Diesel: ≤1700cc
   const fcrFamille =
     car.fuel_type === 'electric' ||
     car.fuel_type === 'hybrid_rechargeable' ||
     (age <= 8 &&
       ((car.fuel_type === 'essence' && (car.engine_cc || 0) <= 1400) ||
-        (car.fuel_type === 'diesel' && (car.engine_cc || 0) <= 1700)));
+        (car.fuel_type === 'diesel' && (car.engine_cc || 0) <= 1700) ||
+        (car.fuel_type === 'hybrid' && (car.engine_cc || 0) <= 1700)));
 
   return { fcr_tre_eligible: fcrTre, fcr_famille_eligible: fcrFamille, age_years: age };
 }
