@@ -56,13 +56,24 @@ export function extractMainMessage(message: string): string {
   for (const line of lines) {
     const trimmed = line.trim();
 
-    // Check if line starts with a number followed by period
+    // Check if line starts with a number followed by period (pure option line)
     const isOption = /^\d+\.\s/.test(trimmed);
 
-    // Check if line contains inline options (e.g., "1. A  2. B  3. C")
-    const hasInlineOptions = /\d+\.\s*\S+\s+\d+\.\s*\S+/.test(trimmed);
-
-    if (!isOption && !hasInlineOptions && trimmed) {
+    // Check if line contains inline options (e.g., "Question? 1. A  2. B  3. C")
+    // Extract the question part before the first numbered option
+    const inlineMatch = trimmed.match(/^(.+?)\s*\d+\.\s/);
+    
+    if (isOption) {
+      // Skip pure option lines like "1. SUV"
+      continue;
+    } else if (inlineMatch && inlineMatch[1]) {
+      // Line has inline options - extract the question part
+      const questionPart = inlineMatch[1].trim();
+      if (questionPart) {
+        mainLines.push(questionPart);
+      }
+    } else if (trimmed) {
+      // Regular text line
       mainLines.push(trimmed);
     }
   }

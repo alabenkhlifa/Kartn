@@ -86,16 +86,17 @@ export async function searchCars(
   }
 
   if (filters.body_type) {
-    const bodyMap: Record<string, string[]> = {
-      suv: ['suv', '4x4', 'crossover'],
-      berline: ['berline', 'sedan', 'limousine'],
-      citadine: ['citadine', 'compact', 'kleinwagen', 'hatchback'],
-      break: ['break', 'wagon', 'kombi', 'station wagon'],
-      monospace: ['monospace', 'mpv', 'minivan', 'van'],
-      compact: ['compact', 'citadine', 'kleinwagen'],
+    // Use ilike for partial matching since DB has values like "SUV/Geländewagen/Pickup"
+    const bodyPatterns: Record<string, string> = {
+      suv: '%SUV%',
+      berline: '%berline%',
+      citadine: '%citadine%',
+      break: '%break%',
+      monospace: '%monospace%',
+      compact: '%compact%',
     };
-    const bodyValues = bodyMap[filters.body_type] || [filters.body_type];
-    query = query.in('body_type', bodyValues);
+    const pattern = bodyPatterns[filters.body_type] || `%${filters.body_type}%`;
+    query = query.ilike('body_type', pattern);
   }
 
   // Condition filter (new vs used) - based on mileage since there's no condition column
