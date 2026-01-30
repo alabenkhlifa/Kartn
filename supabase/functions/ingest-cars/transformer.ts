@@ -99,14 +99,21 @@ function generateId(source: string, url: string): string {
 
 /**
  * Compute FCR eligibility based on Tunisian import regulations
+ * FCR only applies to imported cars - local TN cars are NOT eligible
  */
 function computeFcrEligibility(car: {
   year: number;
   fuel_type: string;
   engine_cc: number | null;
+  country: string;
 }): { fcr_tre_eligible: boolean; fcr_famille_eligible: boolean; age_years: number } {
   const currentYear = new Date().getFullYear();
   const age = currentYear - car.year;
+
+  // FCR only for imports - TN local cars are NOT eligible
+  if (car.country === 'TN') {
+    return { fcr_tre_eligible: false, fcr_famille_eligible: false, age_years: age };
+  }
 
   // FCR TRE: ≤5 years, essence ≤2000cc, diesel ≤2500cc, EV always ok
   const fcrTre =
@@ -153,7 +160,7 @@ export function transformAutoScout24Row(
     const engineCc = parseIntOrNull(row.engine_cc);
     const cvDin = parseIntOrNull(row.power_hp);
 
-    const fcr = computeFcrEligibility({ year, fuel_type: fuelType, engine_cc: engineCc });
+    const fcr = computeFcrEligibility({ year, fuel_type: fuelType, engine_cc: engineCc, country: config.country });
 
     return {
       id: generateId(config.source, row.listing_url),
@@ -205,6 +212,7 @@ export function transformAutomobileTnNewRow(
       year: currentYear,
       fuel_type: fuelType,
       engine_cc: engineCc,
+      country: 'TN',
     });
 
     return {
@@ -260,7 +268,7 @@ export function transformAutomobileTnUsedRow(
     const fuelType = normalizeFuelType(row.fuel_type);
     const engineCc = parseIntOrNull(row.cv_fiscal) ? null : null; // Used cars don't have engine_cc in CSV
 
-    const fcr = computeFcrEligibility({ year, fuel_type: fuelType, engine_cc: engineCc });
+    const fcr = computeFcrEligibility({ year, fuel_type: fuelType, engine_cc: engineCc, country: 'TN' });
 
     return {
       id: generateId(config.source, row.url),

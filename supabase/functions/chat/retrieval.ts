@@ -50,6 +50,7 @@ export async function retrieveKnowledge(
 
 /**
  * Search cars based on extracted filters
+ * Returns unranked results - scoring is done separately
  */
 export async function searchCars(
   filters: CarSearchFilters,
@@ -61,7 +62,7 @@ export async function searchCars(
       `
       id, brand, model, variant, year,
       price_eur, price_tnd, fuel_type, engine_cc,
-      mileage_km, country, url,
+      mileage_km, body_type, condition, country, url,
       fcr_tre_eligible, fcr_famille_eligible
     `
     )
@@ -78,9 +79,34 @@ export async function searchCars(
       diesel: ['diesel'],
       electric: ['electric', 'électrique'],
       hybrid: ['hybrid', 'hybride'],
+      hybrid_rechargeable: ['hybrid_rechargeable', 'plug-in hybrid', 'phev'],
     };
     const fuelValues = fuelMap[filters.fuel_type] || [filters.fuel_type];
     query = query.in('fuel_type', fuelValues);
+  }
+
+  if (filters.body_type) {
+    const bodyMap: Record<string, string[]> = {
+      suv: ['suv', '4x4', 'crossover'],
+      berline: ['berline', 'sedan', 'limousine'],
+      citadine: ['citadine', 'compact', 'kleinwagen', 'hatchback'],
+      break: ['break', 'wagon', 'kombi', 'station wagon'],
+      monospace: ['monospace', 'mpv', 'minivan', 'van'],
+      compact: ['compact', 'citadine', 'kleinwagen'],
+    };
+    const bodyValues = bodyMap[filters.body_type] || [filters.body_type];
+    query = query.in('body_type', bodyValues);
+  }
+
+  // Condition filter (new vs used)
+  if (filters.condition) {
+    if (filters.condition === 'new') {
+      // New cars: mileage = 0 or condition = 'new'
+      query = query.or('mileage_km.eq.0,condition.eq.new');
+    } else if (filters.condition === 'used') {
+      // Used cars: mileage > 0 or condition = 'used'
+      query = query.or('mileage_km.gt.0,condition.eq.used');
+    }
   }
 
   if (filters.year_min) {
@@ -92,9 +118,11 @@ export async function searchCars(
   }
 
   if (filters.budget_max) {
-    // Check both EUR and TND prices
+    // For budget filtering, we're more lenient (allow up to 20% over)
+    // The scoring system will penalize over-budget cars
+    const maxBudgetWithMargin = filters.budget_max * 1.2;
     query = query.or(
-      `price_tnd.lte.${filters.budget_max},price_eur.lte.${filters.budget_max / 3.3}`
+      `price_tnd.lte.${maxBudgetWithMargin},price_eur.lte.${maxBudgetWithMargin / 3.3}`
     );
   }
 
@@ -116,10 +144,9 @@ export async function searchCars(
     query = query.eq('country', filters.country.toUpperCase());
   }
 
-  // Order by price and limit
-  query = query
-    .order('price_tnd', { ascending: true, nullsFirst: false })
-    .limit(RETRIEVAL_CONFIG.cars_limit);
+  // Fetch more candidates for scoring (we'll rank and limit later)
+  // Don't sort by price - we'll sort by score instead
+  query = query.limit(100);
 
   const { data, error } = await query;
 

@@ -174,4 +174,21 @@ npm run migrate
 # Lint and format
 npm run lint
 npm run format
+
+# Start chat edge function locally
+npx supabase functions serve chat --env-file supabase/.env.local
+```
+
+## Chat Function Testing
+
+See `TESTING.md` for full test commands. Quick reference:
+
+```bash
+# Single greeting test
+curl -s 'http://127.0.0.1:54321/functions/v1/chat' \
+  -H 'Content-Type: application/json' \
+  -d '{"message": "Bonjour"}' | jq '.'
+
+# Full wizard flow test
+TESTING.md contains batch commands for all flows
 ```
