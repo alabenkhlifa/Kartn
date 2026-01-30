@@ -54,15 +54,15 @@ export default function CarList({ cars }: CarListProps) {
         </>
       )}
 
-      {/* Scrollable Container */}
+      {/* Cards Container - Vertical on mobile, horizontal scroll on desktop */}
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory
-                   scrollbar-hide"
+        className="flex flex-col md:flex-row gap-4 md:overflow-x-auto pb-4 md:-mx-4 md:px-4 
+                   md:snap-x md:snap-mandatory scrollbar-hide"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {cars.map((car, index) => (
-          <div key={car.id} className="snap-start">
+          <div key={car.id} className="md:snap-start md:flex-shrink-0">
             <CarCard car={car} index={index} />
           </div>
         ))}

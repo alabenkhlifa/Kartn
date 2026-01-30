@@ -28,7 +28,7 @@ export default function CarCard({ car }: CarCardProps) {
 
   return (
     <div
-      className="min-w-[280px] max-w-[320px] p-4 rounded-xl bg-bg-secondary
+      className="w-full md:min-w-[280px] md:max-w-[320px] p-4 rounded-xl bg-bg-secondary
                  border border-white/10 hover:border-white/20
                  transition-colors"
     >
