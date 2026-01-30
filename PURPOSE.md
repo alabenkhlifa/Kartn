@@ -138,17 +138,22 @@ GitHub Actions (Scraping) → Public JSON/CSV → Supabase Edge Functions → Po
     6. Call Groq API (Llama 3.3 70B)
     7. Return response
 
-### 3.2 Query Classification
+### 3.2 Query Classification (Two-Stage LLM)
 
-- [ ] Detect intent: eligibility check, car search, cost calculation, general info
-- [ ] Route to appropriate retrieval strategy:
-    - Eligibility → Knowledge base only
-    - Car search → SQL + Knowledge base
-    - Cost calculation → Deterministic engine + Knowledge base
+- [ ] **Stage 1: Fast Classification** (Llama 3.1 8B via Groq)
+    - Detect intent: `eligibility`, `car_search`, `cost_calculation`, `general_info`, `off_topic`
+    - Detect language: `french`, `arabic`, `derja`
+    - Extract filters (budget, fuel type, year, etc.) if car search
+- [ ] **Stage 2: Route to retrieval strategy**
+    - `off_topic` → Return polite redirect (skip retrieval + generation)
+    - `eligibility` → Knowledge base only
+    - `car_search` → SQL + Knowledge base
+    - `cost_calculation` → Calculation engine + Knowledge base
+    - `general_info` → Knowledge base only
 - **Mixed Query Handling**: Multi-step pipeline approach
     1. Extract eligibility info from query
     2. Search cars based on filters
-    3. Combine results for LLM response
+    3. Combine results for LLM response (Llama 3.3 70B)
 
 ### 3.3 Calculation Engine
 
