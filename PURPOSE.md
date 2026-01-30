@@ -120,16 +120,16 @@ GitHub Actions (Scraping) → Public JSON/CSV → Supabase Edge Functions → Po
 
 ---
 
-## Phase 3: Orchestration Layer
+## Phase 3: Orchestration Layer ✓
 
 ### 3.1 Chat Endpoint (Supabase Edge Function)
 
-- [ ] Create Edge Function `chat`
-- [ ] System prompt with:
+- [x] Create Edge Function `chat`
+- [x] System prompt with:
     - **Topic restrictions**: Only respond to car purchasing, importing, FCR, taxes, financing, government programs, EV incentives, insurance, registration, running costs
     - **Language mirroring**: Respond in user's language (French, Arabic, or Derja)
     - **Off-topic handling**: Politely redirect to in-scope topics
-- [ ] Flow:
+- [x] Flow:
     1. Receive user query
     2. Generate query embedding (HuggingFace API)
     3. Vector search on `knowledge_chunks`
@@ -140,11 +140,11 @@ GitHub Actions (Scraping) → Public JSON/CSV → Supabase Edge Functions → Po
 
 ### 3.2 Query Classification (Two-Stage LLM)
 
-- [ ] **Stage 1: Fast Classification** (Llama 3.1 8B via Groq)
+- [x] **Stage 1: Fast Classification** (Llama 3.1 8B via Groq)
     - Detect intent: `eligibility`, `car_search`, `cost_calculation`, `general_info`, `off_topic`
     - Detect language: `french`, `arabic`, `derja`
     - Extract filters (budget, fuel type, year, etc.) if car search
-- [ ] **Stage 2: Route to retrieval strategy**
+- [x] **Stage 2: Route to retrieval strategy**
     - `off_topic` → Return polite redirect (skip retrieval + generation)
     - `eligibility` → Knowledge base only
     - `car_search` → SQL + Knowledge base
@@ -157,13 +157,13 @@ GitHub Actions (Scraping) → Public JSON/CSV → Supabase Edge Functions → Po
 
 ### 3.3 Calculation Engine (Hybrid: LLM + Deterministic Functions)
 
-- [ ] **Tax calculator function** - 5-layer structure (DD → DC → TVA → TFD → fees)
+- [x] **Tax calculator function** - 5-layer structure (DD → DC → TVA → TFD → fees)
     - Rates from KB: `customs-taxes.md`
     - Inputs: CIF, engine_cc, fuel_type, regime, vehicle_type (EV/PHEV/HEV/thermal)
     - Output: Breakdown + total in TND
-- [ ] **EUR-to-TND converter** - Live rate with configurable buffer (default 5%)
-- [ ] **FCR savings calculator** - Compare regime options (TRE vs Famille vs Commun)
-- [ ] **LLM tool calling** - Groq function calling to invoke calculators when needed
+- [x] **EUR-to-TND converter** - Live rate with configurable buffer (default 5%)
+- [x] **FCR savings calculator** - Compare regime options (TRE vs Famille vs Commun)
+- [x] **LLM tool calling** - Groq function calling to invoke calculators when needed
     - LLM recognizes calculation intent → calls function → returns accurate result
 
 ---

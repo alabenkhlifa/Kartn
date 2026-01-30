@@ -399,3 +399,9 @@ enabled = true
 verify_jwt = true
 import_map = "./functions/ingest-knowledge/deno.json"
 entrypoint = "./functions/ingest-knowledge/index.ts"
+
+[functions.chat]
+enabled = true
+verify_jwt = false
+import_map = "./functions/chat/deno.json"
+entrypoint = "./functions/chat/index.ts"
