@@ -23,7 +23,7 @@ export default function SuggestionButtons({
           onClick={() => onSelect(option)}
           disabled={disabled}
           className="px-3.5 py-2 text-sm rounded-full bg-bg-elevated border border-white/10
-                     text-text-primary hover:border-accent/50 hover:bg-bg-secondary
+                     text-text-primary hover:bg-accent hover:text-white hover:border-accent
                      transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed"
         >

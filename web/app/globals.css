@@ -3,18 +3,19 @@
 @tailwind utilities;
 
 :root {
-  /* Accent - KarTN Blue */
-  --accent: #00D4FF;
-  --accent-hover: #1AD1FF;
+  /* Accent - Electric Blue */
+  --accent: #2D8CFF;
+  --accent-hover: #1A7AEE;
+  --accent-light: rgba(45, 140, 255, 0.12);
 
-  /* Background - ChatGPT-like grays */
-  --bg-primary: #212121;
-  --bg-secondary: #2f2f2f;
-  --bg-elevated: #303030;
+  /* Background - Dark gray theme */
+  --bg-primary: #1E1E1E;
+  --bg-secondary: #2A2A2A;
+  --bg-elevated: #353535;
 
   /* Text */
-  --text-primary: #ececec;
-  --text-secondary: #b4b4b4;
+  --text-primary: #FFFFFF;
+  --text-secondary: #B0B0B0;
 
   /* Status */
   --success: #10B981;
@@ -65,12 +66,12 @@ body {
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(180, 180, 180, 0.3);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(180, 180, 180, 0.5);
+    background: rgba(255, 255, 255, 0.3);
   }
 }
 
@@ -83,7 +84,7 @@ body {
 /* Selection */
 ::selection {
   background-color: var(--accent);
-  color: var(--bg-primary);
+  color: #FFFFFF;
 }
 
 @layer utilities {

@@ -1,4 +1,4 @@
-import { ConversationState, Language, CarResult, ScoredCarResult } from './types.ts';
+import { ConversationState, Language, CarResult, ScoredCarResult, TaxBreakdown, FCRComparison, ProcedureType } from './types.ts';
 import { EXCHANGE_RATE } from './config.ts';
 
 type Templates = Record<ConversationState, Record<Language, string>>;
@@ -17,6 +17,11 @@ const TEMPLATES: Templates = {
 1. تحب تشري كرهبة؟
 2. تحب تحسب مصاريف الاستيراد؟
 3. عندك أسئلة على الإجراءات؟`,
+  },
+  asking_car_origin: {
+    french: 'D\'où vient la voiture? 1. En Tunisie  2. De l\'étranger (import)',
+    arabic: 'الكرهبة منين؟ 1. من تونس  2. من الخارج (استيراد)',
+    derja: 'الكرهبة منين؟ 1. من تونس  2. من برّا (توريد)',
   },
   asking_residency: {
     french: 'Vous êtes: 1. En Tunisie  2. À l\'étranger (TRE)',
@@ -71,15 +76,64 @@ const TEMPLATES: Templates = {
     arabic: '',
     derja: '',
   },
-  cost_calculator: {
-    french: 'Donnez-moi: prix EUR, cylindrée, carburant (essence/diesel/électrique)',
-    arabic: 'أعطني: السعر باليورو، السعة، الوقود',
-    derja: 'قولي: السوم بالأورو، السيلاندري، البنزين ولا مازوط',
+  // Cost calculator flow
+  asking_calc_price: {
+    french: 'Quel est le prix de la voiture en euros?',
+    arabic: 'قداش سعر الكرهبة باليورو؟',
+    derja: 'قداش السوم بالأورو؟',
   },
+  asking_calc_engine: {
+    french: `Quelle est la cylindrée?
+1. Jusqu'à 1600 cc
+2. 1601 - 2000 cc
+3. Plus de 2000 cc`,
+    arabic: `شنية السعة؟
+1. حتى 1600 cc
+2. 1601 - 2000 cc
+3. أكثر من 2000 cc`,
+    derja: `قداش السيلاندري؟
+1. حتى 1600 cc
+2. 1601 - 2000 cc
+3. أكثر من 2000 cc`,
+  },
+  asking_calc_fuel: {
+    french: `Type de carburant?
+1. Essence
+2. Diesel
+3. Électrique`,
+    arabic: `نوع الوقود؟
+1. بنزين
+2. ديزل
+3. كهربائي`,
+    derja: `شنوة الكاربيرون؟
+1. بنزين
+2. مازوط
+3. كهربائي`,
+  },
+  showing_calculation: {
+    french: '',
+    arabic: '',
+    derja: '',
+  },
+  // Procedure info flow
   procedure_info: {
-    french: 'Quelle procédure? 1. Import FCR TRE  2. FCR Famille  3. Achat local',
-    arabic: 'أي إجراء؟ 1. استيراد FCR TRE  2. FCR عائلة  3. شراء محلي',
-    derja: 'شنو تحب تعرف؟ 1. توريد TRE  2. FCR عايلة  3. شراء من تونس',
+    french: `Quelle procédure vous intéresse?
+1. Import FCR TRE (Tunisiens à l'étranger)
+2. FCR Famille (Article 55)
+3. Achat local en Tunisie`,
+    arabic: `أي إجراء تحب تعرف عليه؟
+1. استيراد FCR TRE (تونسيين في الخارج)
+2. FCR عائلة (الفصل 55)
+3. شراء محلي في تونس`,
+    derja: `شنو تحب تعرف؟
+1. توريد TRE (للتوانسة برّا)
+2. FCR عايلة (الفصل 55)
+3. شراء من تونس`,
+  },
+  showing_procedure_detail: {
+    french: '',
+    arabic: '',
+    derja: '',
   },
 };
 
@@ -227,4 +281,321 @@ export function formatCarResults(cars: CarResult[], language: Language): string 
   const carLines = cars.slice(0, 3).map((car, i) => formatCarResult(car, i + 1, language));
 
   return `${header[language]}\n${carLines.join('\n')}`;
+}
+
+/**
+ * Format calculation result with transition question
+ */
+export function formatCalculationResult(
+  calculation: TaxBreakdown | FCRComparison,
+  language: Language
+): string {
+  const isFcrComparison = 'regime_commun' in calculation;
+
+  let result: string;
+
+  if (isFcrComparison) {
+    const comp = calculation as FCRComparison;
+    if (language === 'french') {
+      result = `**Estimation des coûts d'importation**
+
+**Régime Commun**: ${comp.regime_commun.final_price.toLocaleString()} TND`;
+
+      if (comp.fcr_tre) {
+        result += `\n**FCR TRE**: ${comp.fcr_tre.final_price.toLocaleString()} TND`;
+      }
+      if (comp.fcr_famille) {
+        result += `\n**FCR Famille**: ${comp.fcr_famille.final_price.toLocaleString()} TND`;
+      }
+
+      result += `\n\n**Recommandation**: ${comp.recommended}`;
+      if (comp.savings > 0) {
+        result += ` (économie de ${comp.savings.toLocaleString()} TND)`;
+      }
+    } else {
+      result = `**تقدير تكاليف الاستيراد**
+
+**النظام العام**: ${comp.regime_commun.final_price.toLocaleString()} TND`;
+
+      if (comp.fcr_tre) {
+        result += `\n**FCR TRE**: ${comp.fcr_tre.final_price.toLocaleString()} TND`;
+      }
+      if (comp.fcr_famille) {
+        result += `\n**FCR عائلة**: ${comp.fcr_famille.final_price.toLocaleString()} TND`;
+      }
+
+      result += `\n\n**التوصية**: ${comp.recommended}`;
+      if (comp.savings > 0) {
+        result += ` (وفر ${comp.savings.toLocaleString()} TND)`;
+      }
+    }
+  } else {
+    const breakdown = calculation as TaxBreakdown;
+    if (language === 'french') {
+      result = `**Estimation des coûts**
+
+- Valeur CIF: ${breakdown.cif.toLocaleString()} TND
+- Droits de douane: ${breakdown.droits_douane.toLocaleString()} TND
+- Taxe de consommation: ${breakdown.taxe_consommation.toLocaleString()} TND
+- TVA: ${breakdown.tva.toLocaleString()} TND
+- Total taxes: ${breakdown.total_taxes.toLocaleString()} TND
+
+**Prix final estimé: ${breakdown.final_price.toLocaleString()} TND**
+(Charge fiscale: ${breakdown.tax_burden_percent}%)`;
+    } else {
+      result = `**تقدير التكاليف**
+
+- قيمة CIF: ${breakdown.cif.toLocaleString()} TND
+- رسوم جمركية: ${breakdown.droits_douane.toLocaleString()} TND
+- ضريبة استهلاك: ${breakdown.taxe_consommation.toLocaleString()} TND
+- TVA: ${breakdown.tva.toLocaleString()} TND
+- مجموع الضرائب: ${breakdown.total_taxes.toLocaleString()} TND
+
+**السعر النهائي المقدر: ${breakdown.final_price.toLocaleString()} TND**
+(العبء الضريبي: ${breakdown.tax_burden_percent}%)`;
+    }
+  }
+
+  // Add transition question
+  const transitionQuestion: Record<Language, string> = {
+    french: `\n\nVoulez-vous chercher une voiture maintenant?
+1. Oui
+2. Non, retour au menu`,
+    arabic: `\n\nتحب تلقى كرهبة توا؟
+1. نعم
+2. لا، رجوع للقائمة`,
+    derja: `\n\nتحب تلقى كرهبة توا؟
+1. إيه
+2. لا، نرجع للقائمة`,
+  };
+
+  return result + transitionQuestion[language];
+}
+
+/**
+ * Get procedure detail text
+ */
+export function getProcedureDetail(procedure: ProcedureType | null, language: Language): string {
+  if (!procedure) return getTemplate('procedure_info', language);
+
+  const details: Record<ProcedureType, Record<Language, string>> = {
+    fcr_tre: {
+      french: `**Import FCR TRE (Tunisiens à l'étranger)**
+
+**Conditions d'éligibilité:**
+- Avoir la nationalité tunisienne
+- Résider à l'étranger depuis au moins 2 ans
+- Ne pas avoir bénéficié de FCR dans les 5 dernières années
+
+**Limites du véhicule:**
+- Essence: max 2000 cc
+- Diesel: max 2000 cc
+- Électrique/Hybride rechargeable: pas de limite
+- Âge max: 5 ans
+
+**Avantages:**
+- Paiement de seulement 25% des taxes
+- Exonération partielle des droits de douane
+
+**Documents requis:**
+- Passeport tunisien
+- Attestation de résidence à l'étranger
+- Carte grise originale du véhicule`,
+      arabic: `**استيراد FCR TRE (التونسيين بالخارج)**
+
+**شروط الأهلية:**
+- الجنسية التونسية
+- الإقامة في الخارج لمدة سنتين على الأقل
+- عدم الاستفادة من FCR خلال 5 سنوات الأخيرة
+
+**حدود السيارة:**
+- بنزين: أقصى 2000 cc
+- ديزل: أقصى 2000 cc
+- كهربائي/هجين قابل للشحن: بدون حدود
+- العمر الأقصى: 5 سنوات
+
+**المزايا:**
+- دفع 25% فقط من الضرائب
+- إعفاء جزئي من الرسوم الجمركية
+
+**الوثائق المطلوبة:**
+- جواز سفر تونسي
+- شهادة إقامة بالخارج
+- البطاقة الرمادية الأصلية للسيارة`,
+      derja: `**توريد FCR TRE (للتوانسة برّا)**
+
+**الشروط:**
+- تونسي
+- ساكن برّا 2 سنين على الأقل
+- ما خذيتش FCR في 5 سنين الأخيرة
+
+**حدود الكرهبة:**
+- بنزين: ماكس 2000 cc
+- مازوط: ماكس 2000 cc
+- كهربائية/هيبريد يتشارج: بلا حدود
+- العمر ماكس: 5 سنين
+
+**الفوائد:**
+- تخلص 25% برك من الضرائب
+- إعفاء جزئي من الديوانة
+
+**الورق اللازم:**
+- باسبور تونسي
+- شهادة إقامة من برّا
+- الكارت قريز الأصلي`,
+    },
+    fcr_famille: {
+      french: `**FCR Famille (Article 55)**
+
+**Conditions d'éligibilité:**
+- Être résident en Tunisie
+- Avoir un parent direct TRE (père, mère, enfant, conjoint)
+- Le TRE n'a pas utilisé son FCR
+
+**Limites du véhicule:**
+- Essence: max 1600 cc
+- Diesel: max 1900 cc
+- Électrique/Hybride rechargeable: pas de limite
+- Âge max: 3 ans
+
+**Avantages:**
+- Taxe de consommation réduite à 10%
+- TVA réduite à 7%
+
+**Documents requis:**
+- Livret de famille
+- Attestation de résidence du TRE
+- Engagement à ne pas vendre pendant 5 ans`,
+      arabic: `**FCR عائلة (الفصل 55)**
+
+**شروط الأهلية:**
+- مقيم في تونس
+- عندك قريب مباشر TRE (أب، أم، ولد، زوج/زوجة)
+- الـ TRE ما استعملش الـ FCR متاعو
+
+**حدود السيارة:**
+- بنزين: أقصى 1600 cc
+- ديزل: أقصى 1900 cc
+- كهربائي/هجين قابل للشحن: بدون حدود
+- العمر الأقصى: 3 سنوات
+
+**المزايا:**
+- ضريبة استهلاك مخفضة 10%
+- TVA مخفضة 7%
+
+**الوثائق المطلوبة:**
+- دفتر العائلة
+- شهادة إقامة الـ TRE
+- التزام بعدم البيع لمدة 5 سنوات`,
+      derja: `**FCR عايلة (الفصل 55)**
+
+**الشروط:**
+- ساكن في تونس
+- عندك قريب TRE (بوك، أمك، ولدك، مرتك/راجلك)
+- الـ TRE ما خذاش الـ FCR متاعو
+
+**حدود الكرهبة:**
+- بنزين: ماكس 1600 cc
+- مازوط: ماكس 1900 cc
+- كهربائية/هيبريد يتشارج: بلا حدود
+- العمر ماكس: 3 سنين
+
+**الفوائد:**
+- ضريبة استهلاك 10% برك
+- TVA 7% برك
+
+**الورق اللازم:**
+- دفتر عايلة
+- شهادة إقامة الـ TRE
+- التزام ما تبيعش الكرهبة 5 سنين`,
+    },
+    achat_local: {
+      french: `**Achat local en Tunisie**
+
+**Options disponibles:**
+
+**1. Concessionnaires officiels (Neuf)**
+- Prix fixe, garantie constructeur
+- Financement disponible
+- Pas de douane
+
+**2. Marché occasion local**
+- Prix négociable
+- Vérifier l'historique du véhicule
+- Visite technique obligatoire
+
+**3. RS (Régime Suspendu) - TRE vendant**
+- Véhicules FCR TRE revendus
+- Prix souvent compétitifs
+- Vérifier l'éligibilité du transfert
+
+**Conseils:**
+- Toujours vérifier le certificat de situation
+- Faire une expertise mécanique
+- Négocier le prix final tout compris`,
+      arabic: `**الشراء المحلي في تونس**
+
+**الخيارات المتاحة:**
+
+**1. الوكلاء الرسميون (جديد)**
+- سعر ثابت، ضمان المصنع
+- تمويل متاح
+- بدون جمارك
+
+**2. سوق المستعمل المحلي**
+- السعر قابل للتفاوض
+- تحقق من تاريخ السيارة
+- الفحص الفني إلزامي
+
+**3. RS (النظام المعلق) - TRE يبيع**
+- سيارات FCR TRE معاد بيعها
+- أسعار تنافسية عادة
+- تحقق من أهلية النقل
+
+**نصائح:**
+- دائماً تحقق من شهادة الوضعية
+- اعمل خبرة ميكانيكية
+- تفاوض على السعر النهائي شامل`,
+      derja: `**شراء من تونس**
+
+**الاختيارات:
+
+**1. الوكلاء (جديدة)**
+- سوم ثابت، ضمان المصنع
+- تسهيلات موجودة
+- بلا ديوانة
+
+**2. سوق المستعمل**
+- السوم يتفاوض
+- شوف تاريخ الكرهبة
+- الفيزيت لازم
+
+**3. RS - TRE يبيع**
+- كراهب FCR TRE يرجعو يبيعوها
+- الأسعار مليحة عادة
+- تثبت من نقل الملكية
+
+**نصايح:**
+- ديما شوف شهادة الوضعية
+- دير خبير ميكانيك
+- فاصل على السوم النهائي`,
+    },
+  };
+
+  const detail = details[procedure]?.[language] || details[procedure]?.french || '';
+
+  // Add transition question
+  const transitionQuestion: Record<Language, string> = {
+    french: `\n\nVoulez-vous chercher une voiture maintenant?
+1. Oui
+2. Non, retour au menu`,
+    arabic: `\n\nتحب تلقى كرهبة توا؟
+1. نعم
+2. لا، رجوع للقائمة`,
+    derja: `\n\nتحب تلقى كرهبة توا؟
+1. إيه
+2. لا، نرجع للقائمة`,
+  };
+
+  return detail + transitionQuestion[language];
 }

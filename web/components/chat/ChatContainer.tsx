@@ -6,6 +6,7 @@ import { ParsedOption } from '@/types';
 import { useChat } from '@/hooks/useChat';
 import MessageList from './MessageList';
 import InputArea from './InputArea';
+import WelcomeScreen from '@/components/welcome/WelcomeScreen';
 
 export default function ChatContainer() {
   const { messages, isLoading, error, sendUserMessage, clearConversation } = useChat();
@@ -18,30 +19,33 @@ export default function ChatContainer() {
     [sendUserMessage]
   );
 
+  const handleFAQClick = useCallback(
+    (message: string) => {
+      sendUserMessage(message);
+    },
+    [sendUserMessage]
+  );
+
+  const hasMessages = messages.length > 0;
+
   return (
     <div className="flex flex-col h-full bg-bg-primary">
       {/* Header */}
-      <header className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/10">
-        {/* Logo/Title */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-            <span className="text-sm font-bold text-bg-primary">K</span>
-          </div>
-          <div>
-            <h1 className="text-base font-medium text-text-primary">KarTN</h1>
-            <p className="text-xs text-text-secondary">Assistant auto Tunisie</p>
-          </div>
-        </div>
+      <header className="flex-shrink-0 flex items-center justify-center px-4 py-3 border-b border-white/10 bg-bg-secondary relative">
+        {/* Logo/Title - Centered */}
+        <span className="text-xl font-bold text-accent">KarTN</span>
 
-        {/* Reset Button */}
-        <button
-          onClick={clearConversation}
-          className="p-2 rounded-lg text-text-secondary hover:text-text-primary
-                     hover:bg-white/5 transition-colors"
-          title="Nouvelle conversation"
-        >
-          <RotateCcw className="w-5 h-5" />
-        </button>
+        {/* Reset Button - only show when there are messages */}
+        {hasMessages && (
+          <button
+            onClick={clearConversation}
+            className="absolute right-4 p-2 rounded-lg text-text-secondary hover:text-accent
+                       hover:bg-accent-light transition-colors"
+            title="Nouvelle conversation"
+          >
+            <RotateCcw className="w-5 h-5" />
+          </button>
+        )}
       </header>
 
       {/* Error Banner */}
@@ -51,12 +55,16 @@ export default function ChatContainer() {
         </div>
       )}
 
-      {/* Messages */}
-      <MessageList
-        messages={messages}
-        isLoading={isLoading}
-        onSuggestionSelect={handleSuggestionSelect}
-      />
+      {/* Welcome Screen or Messages */}
+      {!hasMessages && !isLoading ? (
+        <WelcomeScreen onFAQClick={handleFAQClick} />
+      ) : (
+        <MessageList
+          messages={messages}
+          isLoading={isLoading}
+          onSuggestionSelect={handleSuggestionSelect}
+        />
+      )}
 
       {/* Input Area */}
       <InputArea onSend={sendUserMessage} disabled={isLoading} />

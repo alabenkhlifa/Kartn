@@ -9,8 +9,14 @@ export type ConversationState =
   | 'asking_condition'
   | 'asking_budget'
   | 'showing_cars'
-  | 'cost_calculator'
-  | 'procedure_info';
+  // Cost calculator flow
+  | 'asking_calc_price'
+  | 'asking_calc_engine'
+  | 'asking_calc_fuel'
+  | 'showing_calculation'
+  // Procedure info flow
+  | 'procedure_info'
+  | 'showing_procedure_detail';
 
 export type Goal = 'find_car' | 'calculate_cost' | 'procedure';
 export type Residency = 'local' | 'abroad';
@@ -47,8 +53,8 @@ export interface CarResult {
 }
 
 export interface ScoredCarResult extends CarResult {
-  score: number;
-  score_breakdown: {
+  score?: number;
+  score_breakdown?: {
     price_fit: number;
     age: number;
     mileage: number;
@@ -57,8 +63,8 @@ export interface ScoredCarResult extends CarResult {
     fuel_efficiency: number;
     preference_match: number;
   };
-  estimated_total_tnd: number;
-  recommendation_strength: 'excellent' | 'good' | 'fair' | 'poor';
+  estimated_total_tnd?: number;
+  recommendation_strength?: 'excellent' | 'good' | 'fair' | 'poor';
 }
 
 export interface TaxBreakdown {

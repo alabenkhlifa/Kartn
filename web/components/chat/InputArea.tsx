@@ -26,7 +26,7 @@ export default function InputArea({ onSend, disabled = false }: InputAreaProps) 
   };
 
   return (
-    <div className="flex-shrink-0 border-t border-white/10 bg-bg-primary safe-area-bottom">
+    <div className="flex-shrink-0 border-t border-white/10 bg-bg-secondary safe-area-bottom">
       <form onSubmit={handleSubmit} className="p-4">
         <div className="flex items-center gap-3">
           {/* Input Field */}
@@ -36,12 +36,12 @@ export default function InputArea({ onSend, disabled = false }: InputAreaProps) 
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Écrivez votre message..."
+              placeholder="Posez votre question..."
               disabled={disabled}
               className="w-full px-4 py-3 rounded-xl bg-bg-elevated border border-white/10
-                       text-text-primary placeholder:text-text-secondary/60
-                       focus:outline-none focus:border-accent/50
-                       transition-colors text-[15px]
+                       text-text-primary placeholder:text-text-secondary
+                       focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20
+                       transition-all text-[15px]
                        disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
@@ -50,7 +50,7 @@ export default function InputArea({ onSend, disabled = false }: InputAreaProps) 
           <button
             type="submit"
             disabled={!input.trim() || disabled}
-            className="flex-shrink-0 w-11 h-11 rounded-xl bg-accent text-bg-primary
+            className="flex-shrink-0 w-11 h-11 rounded-xl bg-accent text-white
                      flex items-center justify-center
                      hover:bg-accent-hover active:opacity-90
                      disabled:opacity-40 disabled:cursor-not-allowed

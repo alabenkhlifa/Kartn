@@ -3,10 +3,12 @@
 import { Star } from 'lucide-react';
 
 interface StarRatingProps {
-  strength: 'excellent' | 'good' | 'fair' | 'poor';
+  strength?: 'excellent' | 'good' | 'fair' | 'poor';
 }
 
 export default function StarRating({ strength }: StarRatingProps) {
+  if (!strength) return null;
+
   const ratings = {
     excellent: { stars: 3, label: 'EXCELLENT' },
     good: { stars: 2, label: 'BON' },

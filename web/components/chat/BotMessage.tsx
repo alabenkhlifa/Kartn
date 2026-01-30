@@ -1,5 +1,6 @@
 'use client';
 
+import { Car } from 'lucide-react';
 import { Message, ParsedOption } from '@/types';
 import { parseNumberedOptions, extractMainMessage } from '@/lib/parser';
 import SuggestionButtons from '@/components/suggestions/SuggestionButtons';
@@ -24,32 +25,44 @@ export default function BotMessage({
   // Show full message if no options parsed, or if it contains car results
   const displayContent = options.length > 0 && !message.cars?.length ? mainContent : message.content;
 
+  const formatTime = (date: Date) => {
+    return new Intl.DateTimeFormat('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  };
+
   return (
-    <div className="flex items-start gap-3 max-w-[90%]">
+    <div className="flex items-start gap-2 max-w-[90%]">
       {/* Avatar */}
-      <div className="flex-shrink-0 w-7 h-7 rounded-md bg-accent flex items-center justify-center">
-        <span className="text-xs font-bold text-bg-primary">K</span>
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-accent-light flex items-center justify-center">
+        <Car className="w-4 h-4 text-accent" />
       </div>
 
       {/* Message Content */}
-      <div className="flex-1 pt-0.5">
-        <p className="text-[15px] text-text-primary whitespace-pre-wrap leading-relaxed">
-          {displayContent}
+      <div className="flex-1">
+        <div className="bg-bg-secondary rounded-2xl rounded-tl-sm px-4 py-3 border border-white/10">
+          <p className="text-[15px] text-text-primary whitespace-pre-wrap leading-relaxed">
+            {displayContent}
+          </p>
+
+          {/* Suggestion Buttons - Only show for latest message */}
+          {isLatest && options.length > 0 && (
+            <SuggestionButtons
+              options={options}
+              onSelect={onSuggestionSelect}
+              disabled={isLoading}
+            />
+          )}
+
+          {/* Car Results */}
+          {message.cars && message.cars.length > 0 && (
+            <CarList cars={message.cars} />
+          )}
+        </div>
+        <p className="text-xs text-text-secondary mt-1 ml-1">
+          {formatTime(message.timestamp)}
         </p>
-
-        {/* Suggestion Buttons - Only show for latest message */}
-        {isLatest && options.length > 0 && (
-          <SuggestionButtons
-            options={options}
-            onSelect={onSuggestionSelect}
-            disabled={isLoading}
-          />
-        )}
-
-        {/* Car Results */}
-        {message.cars && message.cars.length > 0 && (
-          <CarList cars={message.cars} />
-        )}
       </div>
     </div>
   );

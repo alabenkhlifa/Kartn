@@ -11,13 +11,13 @@ interface CarCardProps {
 }
 
 export default function CarCard({ car }: CarCardProps) {
-  const price = car.price_eur
-    ? formatPrice(car.price_eur, 'EUR')
+  // Always show price in TND - use estimated total for imports, or direct TND price for local cars
+  const priceTnd = car.estimated_total_tnd
+    ? formatPrice(car.estimated_total_tnd, 'TND')
     : car.price_tnd
       ? formatPrice(car.price_tnd, 'TND')
-      : '?';
+      : null;
 
-  const totalTnd = formatPrice(car.estimated_total_tnd, 'TND');
   const mileage = formatMileage(car.mileage_km);
 
   const fcrStatus = car.fcr_tre_eligible
@@ -28,9 +28,9 @@ export default function CarCard({ car }: CarCardProps) {
 
   return (
     <div
-      className="w-full md:min-w-[280px] md:max-w-[320px] p-4 rounded-xl bg-bg-secondary
-                 border border-white/10 hover:border-white/20
-                 transition-colors"
+      className="w-full md:min-w-[280px] md:max-w-[320px] p-4 rounded-xl bg-bg-elevated
+                 border border-white/10 hover:border-accent/30
+                 transition-all"
     >
       {/* Header with Rating */}
       <div className="mb-3">
@@ -45,9 +45,9 @@ export default function CarCard({ car }: CarCardProps) {
 
       {/* Price */}
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-xl font-bold text-accent">{price}</span>
-        <span className="text-text-secondary">→</span>
-        <span className="text-lg font-semibold text-text-primary">~{totalTnd}</span>
+        <span className="text-xl font-bold text-accent">
+          {priceTnd ? `~${priceTnd}` : '?'}
+        </span>
       </div>
 
       {/* Details */}
@@ -78,8 +78,8 @@ export default function CarCard({ car }: CarCardProps) {
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg
-                   bg-accent/10 border border-accent/30 text-accent
-                   hover:bg-accent/20 hover:border-accent/50
+                   bg-accent text-white
+                   hover:bg-accent-hover
                    transition-colors text-sm font-medium"
       >
         <span>Voir l&apos;annonce</span>

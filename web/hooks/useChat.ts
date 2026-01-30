@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { Message, ChatResponse, ScoredCarResult, TaxBreakdown, FCRComparison } from '@/types';
+import { useState, useCallback, useRef } from 'react';
+import { Message } from '@/types';
 import { sendMessage, generateMessageId } from '@/lib/api';
 import { useLocalStorage } from './useLocalStorage';
 import { CONVERSATION_ID_KEY } from '@/lib/constants';
@@ -25,51 +25,6 @@ export function useChat(): UseChatReturn {
   );
 
   const abortControllerRef = useRef<AbortController | null>(null);
-  const initialMessageSent = useRef(false);
-
-  // Send initial greeting on mount
-  useEffect(() => {
-    if (!initialMessageSent.current && messages.length === 0) {
-      initialMessageSent.current = true;
-      // Send empty or greeting message to get initial response
-      sendInitialMessage();
-    }
-  }, []);
-
-  const sendInitialMessage = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await sendMessage({
-        message: 'Bonjour',
-        conversation_id: conversationId || undefined,
-      });
-
-      // Save conversation ID
-      if (response.conversation_id) {
-        setConversationId(response.conversation_id);
-      }
-
-      // Add assistant response
-      const assistantMessage: Message = {
-        id: generateMessageId(),
-        role: 'assistant',
-        content: response.message,
-        timestamp: new Date(),
-        cars: response.cars,
-        calculation: response.calculation,
-      };
-
-      setMessages([assistantMessage]);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Une erreur est survenue';
-      setError(errorMessage);
-      console.error('Chat error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const sendUserMessage = useCallback(
     async (content: string) => {
@@ -133,11 +88,6 @@ export function useChat(): UseChatReturn {
     setMessages([]);
     clearConversationId();
     setError(null);
-    initialMessageSent.current = false;
-    // Trigger new initial message
-    setTimeout(() => {
-      sendInitialMessage();
-    }, 100);
   }, [clearConversationId]);
 
   return {

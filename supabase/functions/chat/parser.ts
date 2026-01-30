@@ -1,4 +1,4 @@
-import { Goal, Residency, FuelPreference, CarTypePreference, ConditionPreference } from './types.ts';
+import { Goal, CarOrigin, Residency, FuelPreference, CarTypePreference, ConditionPreference, CalcFuelType, ProcedureType } from './types.ts';
 
 /**
  * Parse goal selection from user input
@@ -17,6 +17,27 @@ export function parseGoal(input: string): Goal | null {
   }
   if (firstChar === '3' || trimmed.includes('procédure') || trimmed.includes('comment') || trimmed.includes('étape')) {
     return 'procedure';
+  }
+
+  return null;
+}
+
+/**
+ * Parse car origin selection from user input
+ * Accepts: "1", "2", or keywords
+ * 1 = Tunisia (local market), 2 = Abroad (import)
+ */
+export function parseCarOrigin(input: string): CarOrigin | null {
+  const trimmed = input.trim().toLowerCase();
+  const firstChar = trimmed.charAt(0);
+
+  // Tunisia / local market
+  if (firstChar === '1' || trimmed.includes('tunisie') || trimmed.includes('تونس') || trimmed.includes('محلي') || trimmed.includes('local')) {
+    return 'tunisia';
+  }
+  // Abroad / import
+  if (firstChar === '2' || trimmed.includes('étranger') || trimmed.includes('خارج') || trimmed.includes('استيراد') || trimmed.includes('import') || trimmed.includes('برّا') || trimmed.includes('برا')) {
+    return 'abroad';
   }
 
   return null;
@@ -207,6 +228,138 @@ export function parseCondition(input: string): ConditionPreference | null {
   // Any
   if (firstChar === '3' || trimmed.includes('importe') || trimmed.includes('يهم') || trimmed.includes('any') || trimmed.includes('all') || trimmed.includes('both')) {
     return 'any';
+  }
+
+  return null;
+}
+
+/**
+ * Parse price from user input (handles "15000", "15000€", "15 000", etc.)
+ */
+export function parsePrice(input: string): number | null {
+  const trimmed = input.trim().toLowerCase();
+
+  // Remove currency symbols and common suffixes
+  const cleaned = trimmed
+    .replace(/€|eur|euro|euros/gi, '')
+    .replace(/\s/g, '')
+    .trim();
+
+  // Handle "k" suffix (e.g., "15k" → 15000)
+  if (cleaned.endsWith('k')) {
+    const num = parseFloat(cleaned.slice(0, -1));
+    if (!isNaN(num) && num > 0) return num * 1000;
+  }
+
+  // Parse as plain number
+  const num = parseFloat(cleaned);
+  if (!isNaN(num) && num > 0) {
+    // If less than 500, assume it's in thousands
+    return num < 500 ? num * 1000 : num;
+  }
+
+  return null;
+}
+
+/**
+ * Parse engine CC selection (1=≤1600, 2=1601-2000, 3=>2000)
+ * Returns representative CC value for calculation
+ */
+export function parseEngineCC(input: string): number | null {
+  const trimmed = input.trim().toLowerCase();
+  const firstChar = trimmed.charAt(0);
+
+  // Numeric selection
+  if (firstChar === '1') return 1400; // Representative value for ≤1600
+  if (firstChar === '2') return 1800; // Representative value for 1601-2000
+  if (firstChar === '3') return 2200; // Representative value for >2000
+
+  // Keyword matching
+  if (trimmed.includes('1600') || trimmed.includes('petit') || trimmed.includes('صغير')) {
+    return 1400;
+  }
+  if (trimmed.includes('2000') || trimmed.includes('moyen') || trimmed.includes('متوسط')) {
+    return 1800;
+  }
+  if (trimmed.includes('gros') || trimmed.includes('grand') || trimmed.includes('كبير')) {
+    return 2200;
+  }
+
+  return null;
+}
+
+/**
+ * Parse simple fuel type for calculator (1=essence, 2=diesel, 3=electric)
+ */
+export function parseCalcFuelType(input: string): CalcFuelType | null {
+  const trimmed = input.trim().toLowerCase();
+  const firstChar = trimmed.charAt(0);
+
+  // Numeric selection
+  if (firstChar === '1') return 'essence';
+  if (firstChar === '2') return 'diesel';
+  if (firstChar === '3') return 'electric';
+
+  // Keyword matching
+  if (trimmed.includes('essence') || trimmed.includes('بنزين') || trimmed.includes('petrol')) {
+    return 'essence';
+  }
+  if (trimmed.includes('diesel') || trimmed.includes('مازوط') || trimmed.includes('ديزل') || trimmed.includes('gasoil')) {
+    return 'diesel';
+  }
+  if (trimmed.includes('électrique') || trimmed.includes('electric') || trimmed.includes('كهربائي') || trimmed.includes('ev')) {
+    return 'electric';
+  }
+
+  return null;
+}
+
+/**
+ * Parse yes/no response (1/oui/نعم=true, 2/non/لا=false)
+ */
+export function parseYesNo(input: string): boolean | null {
+  const trimmed = input.trim().toLowerCase();
+  const firstChar = trimmed.charAt(0);
+
+  // Yes responses
+  if (firstChar === '1' || trimmed === 'oui' || trimmed === 'نعم' || trimmed === 'إيه' || trimmed === 'yes' || trimmed === 'ok' || trimmed === 'd\'accord') {
+    return true;
+  }
+
+  // No responses
+  if (firstChar === '2' || trimmed === 'non' || trimmed === 'لا' || trimmed === 'no' || trimmed.includes('menu') || trimmed.includes('retour') || trimmed.includes('رجوع')) {
+    return false;
+  }
+
+  return null;
+}
+
+/**
+ * Parse procedure selection (1=fcr_tre, 2=fcr_famille, 3=achat_local)
+ * Handles both numbers and text
+ */
+export function parseProcedure(input: string): ProcedureType | null {
+  const trimmed = input.trim().toLowerCase();
+  const firstChar = trimmed.charAt(0);
+
+  // Numeric selection
+  if (firstChar === '1') return 'fcr_tre';
+  if (firstChar === '2') return 'fcr_famille';
+  if (firstChar === '3') return 'achat_local';
+
+  // Keyword matching - FCR TRE
+  if (trimmed.includes('fcr tre') || trimmed.includes('tre') || trimmed.includes('توريد') || trimmed.includes('import') || trimmed.includes('étranger') || trimmed.includes('خارج')) {
+    return 'fcr_tre';
+  }
+
+  // Keyword matching - FCR Famille
+  if (trimmed.includes('fcr famille') || trimmed.includes('famille') || trimmed.includes('عائلة') || trimmed.includes('عايلة') || trimmed.includes('article 55') || trimmed.includes('art 55') || trimmed.includes('فصل 55')) {
+    return 'fcr_famille';
+  }
+
+  // Keyword matching - Achat local
+  if (trimmed.includes('local') || trimmed.includes('tunisie') || trimmed.includes('محلي') || trimmed.includes('تونس') || trimmed.includes('achat')) {
+    return 'achat_local';
   }
 
   return null;

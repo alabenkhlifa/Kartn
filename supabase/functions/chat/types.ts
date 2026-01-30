@@ -1,6 +1,7 @@
 // Conversation state machine
 export type ConversationState =
   | 'goal_selection'
+  | 'asking_car_origin'
   | 'asking_residency'
   | 'asking_fcr_famille'
   | 'asking_fuel_type'
@@ -8,19 +9,30 @@ export type ConversationState =
   | 'asking_condition'
   | 'asking_budget'
   | 'showing_cars'
-  | 'cost_calculator'
-  | 'procedure_info';
+  // Cost calculator flow
+  | 'asking_calc_price'
+  | 'asking_calc_engine'
+  | 'asking_calc_fuel'
+  | 'showing_calculation'
+  // Procedure info flow
+  | 'procedure_info'
+  | 'showing_procedure_detail';
 
 export type Goal = 'find_car' | 'calculate_cost' | 'procedure';
+export type CarOrigin = 'tunisia' | 'abroad';
 export type Residency = 'local' | 'abroad';
 export type FuelPreference = 'essence' | 'diesel' | 'hybrid' | 'hybrid_rechargeable' | 'electric' | 'any';
 export type CarTypePreference = 'suv' | 'sedan' | 'compact' | 'any';
 export type ConditionPreference = 'new' | 'used' | 'any';
 
+export type CalcFuelType = 'essence' | 'diesel' | 'electric';
+export type ProcedureType = 'fcr_tre' | 'fcr_famille' | 'achat_local';
+
 export interface Conversation {
   id: string;
   state: ConversationState;
   goal: Goal | null;
+  car_origin: CarOrigin | null;
   residency: Residency | null;
   fcr_famille: boolean;
   fuel_preference: FuelPreference | null;
@@ -28,6 +40,12 @@ export interface Conversation {
   condition_preference: ConditionPreference | null;
   budget_tnd: number | null;
   language: Language;
+  // Cost calculator fields
+  calc_price_eur: number | null;
+  calc_engine_cc: number | null;
+  calc_fuel_type: CalcFuelType | null;
+  // Procedure flow field
+  selected_procedure: ProcedureType | null;
 }
 
 // Intent types for query classification

@@ -9,22 +9,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Accent - KarTN Blue
+        // Accent - Electric Blue
         accent: {
-          DEFAULT: "#00D4FF",
-          hover: "#1AD1FF",
-          muted: "#00D4FF",
+          DEFAULT: "#2D8CFF",
+          hover: "#1A7AEE",
+          light: "#2D8CFF20",
         },
-        // Background - ChatGPT-like grays
+        // Background - Dark gray theme
         bg: {
-          primary: "#212121",
-          secondary: "#2f2f2f",
-          elevated: "#303030",
+          primary: "#1E1E1E",
+          secondary: "#2A2A2A",
+          elevated: "#353535",
         },
         // Text
         text: {
-          primary: "#ececec",
-          secondary: "#b4b4b4",
+          primary: "#FFFFFF",
+          secondary: "#B0B0B0",
         },
         // Status
         success: "#10B981",
