@@ -12,8 +12,8 @@ export default function ChatContainer() {
 
   const handleSuggestionSelect = useCallback(
     (option: ParsedOption) => {
-      // Send the number as the message (matching the wizard flow)
-      sendUserMessage(String(option.number));
+      // Send the option text for better chat history readability
+      sendUserMessage(option.text);
     },
     [sendUserMessage]
   );
