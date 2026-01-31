@@ -1,22 +1,31 @@
-import { ConversationState, Language, CarResult, ScoredCarResult, TaxBreakdown, FCRComparison, ProcedureType } from './types.ts';
+import { ConversationState, Language, CarResult, ScoredCarResult, TaxBreakdown, FCRComparison, ProcedureType, EVTopic } from './types.ts';
 import { EXCHANGE_RATE } from './config.ts';
 
 type Templates = Record<ConversationState, Record<Language, string>>;
 
 const TEMPLATES: Templates = {
   goal_selection: {
-    french: `Bienvenue!
-1. Vous cherchez à acheter une voiture ?
-2. Vous voulez calculer les coûts d'importation ?
-3. Vous avez des questions sur les procédures ?`,
-    arabic: `مرحبا!
-1. تبحث عن سيارة للشراء؟
-2. تريد حساب تكاليف الاستيراد؟
-3. عندك أسئلة على الإجراءات؟`,
-    derja: `مرحبا!
-1. تحب تشري كرهبة؟
-2. تحب تحسب مصاريف الاستيراد؟
-3. عندك أسئلة على الإجراءات؟`,
+    french: `Bienvenue! Comment puis-je vous aider?
+1. Acheter une voiture
+2. Procédures FCR
+3. Comparer des voitures
+4. Infos véhicules électriques
+5. Parcourir les offres
+6. Voitures populaires (subventionnées)`,
+    arabic: `مرحبا! كيف نقدر نساعدك؟
+1. شراء سيارة
+2. إجراءات FCR
+3. مقارنة السيارات
+4. معلومات السيارات الكهربائية
+5. تصفح العروض
+6. السيارات الشعبية (مدعومة)`,
+    derja: `مرحبا! كيفاش نعاونك؟
+1. تشري كرهبة
+2. إجراءات FCR
+3. تقارن كراهب
+4. معلومات على الكهربائية
+5. تشوف العروض
+6. كراهب شعبية (مدعومة)`,
   },
   asking_car_origin: {
     french: 'D\'où vient la voiture? 1. En Tunisie  2. De l\'étranger (import)',
@@ -67,9 +76,30 @@ const TEMPLATES: Templates = {
     derja: 'تحب: 1. جديدة  2. مستعملة  3. ما يهمش',
   },
   asking_budget: {
-    french: 'Budget max? 1. 50k TND  2. 70k TND  3. 90k TND  4. 120k+ TND',
-    arabic: 'الميزانية؟ 1. 50 ألف  2. 70 ألف  3. 90 ألف  4. +120 ألف',
-    derja: 'قداش تحب تصرف؟ 1. 50k  2. 70k  3. 90k  4. +120k',
+    french: `Budget maximum?
+1. 50k TND
+2. 70k TND
+3. 90k TND
+4. 120k TND
+5. 150k TND
+6. 200k TND
+7. 300k+ TND`,
+    arabic: `الميزانية القصوى؟
+1. 50 ألف
+2. 70 ألف
+3. 90 ألف
+4. 120 ألف
+5. 150 ألف
+6. 200 ألف
+7. +300 ألف`,
+    derja: `قداش تحب تصرف ماكس؟
+1. 50k
+2. 70k
+3. 90k
+4. 120k
+5. 150k
+6. 200k
+7. +300k`,
   },
   showing_cars: {
     french: '',
@@ -119,18 +149,101 @@ const TEMPLATES: Templates = {
   procedure_info: {
     french: `Quelle procédure vous intéresse?
 1. Import FCR TRE (Tunisiens à l'étranger)
-2. FCR Famille (Article 55)
-3. Achat local en Tunisie`,
+2. FCR Famille (Article 55)`,
     arabic: `أي إجراء تحب تعرف عليه؟
 1. استيراد FCR TRE (تونسيين في الخارج)
-2. FCR عائلة (الفصل 55)
-3. شراء محلي في تونس`,
+2. FCR عائلة (الفصل 55)`,
     derja: `شنو تحب تعرف؟
 1. توريد TRE (للتوانسة برّا)
-2. FCR عايلة (الفصل 55)
-3. شراء من تونس`,
+2. FCR عايلة (الفصل 55)`,
   },
   showing_procedure_detail: {
+    french: '',
+    arabic: '',
+    derja: '',
+  },
+  // Compare cars flow
+  car_comparison_input: {
+    french: `Quelles voitures voulez-vous comparer?
+(ex: Golf 2019 vs Clio 2020, ou "BMW X3 vs Audi Q5")`,
+    arabic: `شنية الكراهب اللي تحب تقارنها؟
+(مثال: Golf 2019 vs Clio 2020)`,
+    derja: `شنو الكراهب اللي تحب تقارنهم؟
+(مثلا: Golf 2019 vs Clio 2020)`,
+  },
+  showing_comparison: {
+    french: '',
+    arabic: '',
+    derja: '',
+  },
+  // EV info flow
+  ev_topic_selection: {
+    french: `Quel sujet vous intéresse?
+1. Différences Hybride/PHEV/Électrique
+2. Nouvelle loi sur les véhicules électriques
+3. Bornes de recharge en Tunisie
+4. Panneaux solaires pour recharge`,
+    arabic: `شنو الموضوع اللي يهمك؟
+1. الفرق بين هيبريد/PHEV/كهربائية
+2. القانون الجديد للسيارات الكهربائية
+3. محطات الشحن في تونس
+4. الألواح الشمسية للشحن`,
+    derja: `شنو يهمك تعرف؟
+1. شنو الفرق بين هيبريد/PHEV/كهربائية
+2. القانون الجديد على الكهربائية
+3. محطات الشحن في تونس
+4. الپانو سولار للشحن`,
+  },
+  showing_ev_info: {
+    french: '',
+    arabic: '',
+    derja: '',
+  },
+  // Browse offers flow (same as find_car)
+  browse_origin_selection: {
+    french: 'D\'où vient la voiture? 1. En Tunisie  2. De l\'étranger (import)',
+    arabic: 'الكرهبة منين؟ 1. من تونس  2. من الخارج (استيراد)',
+    derja: 'الكرهبة منين؟ 1. من تونس  2. من برّا (توريد)',
+  },
+  // Popular cars flow
+  popular_cars_selection: {
+    french: `Voitures populaires (subventionnées):
+1. Vérifier mon éligibilité
+2. Voir les modèles disponibles`,
+    arabic: `السيارات الشعبية (مدعومة):
+1. تثبت من أهليتك
+2. شوف الموديلات المتاحة`,
+    derja: `الكراهب الشعبية (مدعومة):
+1. نشوف إذا عندي الحق
+2. نشوف الموديلات الموجودة`,
+  },
+  asking_popular_eligibility: {
+    french: `Pour les voitures populaires, vous devez:
+- Être résident en Tunisie
+- Revenu mensuel < 3x SMIG (environ 1500 TND)
+- Ne pas avoir bénéficié d'une voiture populaire avant
+
+Votre revenu mensuel est:
+1. Moins de 1500 TND
+2. Plus de 1500 TND`,
+    arabic: `للسيارات الشعبية، لازم:
+- ساكن في تونس
+- الدخل الشهري أقل من 3x SMIG (حوالي 1500 دينار)
+- ما أخذتش سيارة شعبية قبل
+
+دخلك الشهري:
+1. أقل من 1500 دينار
+2. أكثر من 1500 دينار`,
+    derja: `للكراهب الشعبية، لازم:
+- ساكن في تونس
+- الخلاص الشهري أقل من 1500 دينار
+- ما خذيتش كرهبة شعبية قبل
+
+خلاصك الشهري:
+1. أقل من 1500
+2. أكثر من 1500`,
+  },
+  showing_popular_models: {
     french: '',
     arabic: '',
     derja: '',
@@ -509,77 +622,6 @@ export function getProcedureDetail(procedure: ProcedureType | null, language: La
 - شهادة إقامة الـ TRE
 - التزام ما تبيعش الكرهبة 5 سنين`,
     },
-    achat_local: {
-      french: `**Achat local en Tunisie**
-
-**Options disponibles:**
-
-**1. Concessionnaires officiels (Neuf)**
-- Prix fixe, garantie constructeur
-- Financement disponible
-- Pas de douane
-
-**2. Marché occasion local**
-- Prix négociable
-- Vérifier l'historique du véhicule
-- Visite technique obligatoire
-
-**3. RS (Régime Suspendu) - TRE vendant**
-- Véhicules FCR TRE revendus
-- Prix souvent compétitifs
-- Vérifier l'éligibilité du transfert
-
-**Conseils:**
-- Toujours vérifier le certificat de situation
-- Faire une expertise mécanique
-- Négocier le prix final tout compris`,
-      arabic: `**الشراء المحلي في تونس**
-
-**الخيارات المتاحة:**
-
-**1. الوكلاء الرسميون (جديد)**
-- سعر ثابت، ضمان المصنع
-- تمويل متاح
-- بدون جمارك
-
-**2. سوق المستعمل المحلي**
-- السعر قابل للتفاوض
-- تحقق من تاريخ السيارة
-- الفحص الفني إلزامي
-
-**3. RS (النظام المعلق) - TRE يبيع**
-- سيارات FCR TRE معاد بيعها
-- أسعار تنافسية عادة
-- تحقق من أهلية النقل
-
-**نصائح:**
-- دائماً تحقق من شهادة الوضعية
-- اعمل خبرة ميكانيكية
-- تفاوض على السعر النهائي شامل`,
-      derja: `**شراء من تونس**
-
-**الاختيارات:
-
-**1. الوكلاء (جديدة)**
-- سوم ثابت، ضمان المصنع
-- تسهيلات موجودة
-- بلا ديوانة
-
-**2. سوق المستعمل**
-- السوم يتفاوض
-- شوف تاريخ الكرهبة
-- الفيزيت لازم
-
-**3. RS - TRE يبيع**
-- كراهب FCR TRE يرجعو يبيعوها
-- الأسعار مليحة عادة
-- تثبت من نقل الملكية
-
-**نصايح:**
-- ديما شوف شهادة الوضعية
-- دير خبير ميكانيك
-- فاصل على السوم النهائي`,
-    },
   };
 
   const detail = details[procedure]?.[language] || details[procedure]?.french || '';
@@ -593,6 +635,293 @@ export function getProcedureDetail(procedure: ProcedureType | null, language: La
 1. نعم
 2. لا، رجوع للقائمة`,
     derja: `\n\nتحب تلقى كرهبة توا؟
+1. إيه
+2. لا، نرجع للقائمة`,
+  };
+
+  return detail + transitionQuestion[language];
+}
+
+/**
+ * Get EV topic detail text
+ */
+export function getEVTopicDetail(topic: EVTopic | null, language: Language): string {
+  if (!topic) return getTemplate('ev_topic_selection', language);
+
+  const details: Record<EVTopic, Record<Language, string>> = {
+    hybrid_vs_ev: {
+      french: `**Différences entre Hybride, PHEV et Électrique**
+
+**Hybride (HEV)**
+- Moteur essence + petit moteur électrique
+- Batterie rechargée par freinage régénératif
+- Pas besoin de prise électrique
+- Économie: 15-25% de carburant
+- Exemples: Toyota Yaris Hybrid, Honda Jazz
+
+**Hybride Rechargeable (PHEV)**
+- Moteur essence + moteur électrique plus puissant
+- Batterie rechargeable sur prise
+- 40-80 km en tout électrique
+- Idéal pour trajets courts + longs voyages
+- Exemples: Peugeot 3008 PHEV, BMW X1 PHEV
+
+**100% Électrique (BEV)**
+- Aucun moteur à combustion
+- Rechargement uniquement électrique
+- Autonomie: 200-500 km selon modèle
+- Coût d'usage très bas
+- Exemples: Tesla Model 3, MG4, BYD Atto 3`,
+      arabic: `**الفرق بين هيبريد، PHEV وكهربائية**
+
+**هيبريد (HEV)**
+- موتور بنزين + موتور كهربائي صغير
+- البطارية تتشحن من الفرملة
+- ما يحتاجش بريزة كهرباء
+- توفير: 15-25% من البنزين
+- أمثلة: Toyota Yaris Hybrid, Honda Jazz
+
+**هيبريد قابل للشحن (PHEV)**
+- موتور بنزين + موتور كهربائي أقوى
+- بطارية تتشحن من البريزة
+- 40-80 كم كهربائي كامل
+- مثالي للمسافات القصيرة + الطويلة
+- أمثلة: Peugeot 3008 PHEV, BMW X1 PHEV
+
+**كهربائية 100% (BEV)**
+- بدون موتور احتراق
+- شحن كهربائي فقط
+- المدى: 200-500 كم حسب الموديل
+- تكلفة استخدام منخفضة جداً
+- أمثلة: Tesla Model 3, MG4, BYD Atto 3`,
+      derja: `**الفرق بين هيبريد، PHEV وكهربائية**
+
+**هيبريد (HEV)**
+- موتور بنزين + موتور كهربائي صغير
+- الباتري يتشارج من الفران
+- ما يحتاجش پريز
+- توفير: 15-25% من البنزين
+
+**هيبريد يتشارج (PHEV)**
+- موتور بنزين + موتور كهربائي أقوى
+- الباتري يتشارج من الپريز
+- 40-80 كم بالكهرباء
+- باهي للمسافات القصيرة والطويلة
+
+**كهربائية 100%**
+- بلا موتور بنزين
+- شحن كهربائي برك
+- المدى: 200-500 كم
+- التكلفة رخيصة برشا`,
+    },
+    ev_law: {
+      french: `**Nouvelle loi sur les véhicules électriques en Tunisie**
+
+**Avantages fiscaux (2024)**
+- Exonération totale des droits de douane
+- TVA réduite à 7% (au lieu de 19%)
+- Pas de taxe de consommation
+- Pas de TFD (vignette)
+
+**Conditions**
+- Véhicule 100% électrique ou hybride rechargeable
+- Importation neuve ou occasion < 3 ans
+- Homologation technique obligatoire
+
+**Économies estimées**
+- Sur un véhicule de 30,000€:
+- Régime normal: ~75,000 TND de taxes
+- Électrique: ~7,000 TND de taxes
+- Économie: ~68,000 TND!
+
+**Note importante**
+Les avantages s'appliquent aussi bien en FCR TRE qu'en régime commun.`,
+      arabic: `**القانون الجديد للسيارات الكهربائية في تونس**
+
+**المزايا الجبائية (2024)**
+- إعفاء كامل من الرسوم الجمركية
+- TVA مخفضة إلى 7% (بدل 19%)
+- بدون ضريبة استهلاك
+- بدون فينيات
+
+**الشروط**
+- سيارة كهربائية 100% أو هيبريد قابل للشحن
+- استيراد جديد أو مستعمل أقل من 3 سنوات
+- المصادقة التقنية إلزامية
+
+**التوفير المقدر**
+- على سيارة بـ 30,000€:
+- النظام العادي: ~75,000 دينار ضرائب
+- كهربائية: ~7,000 دينار ضرائب
+- توفير: ~68,000 دينار!`,
+      derja: `**القانون الجديد على الكراهب الكهربائية في تونس**
+
+**الفوائد الجبائية (2024)**
+- معفي من الديوانة كامل
+- TVA 7% برك (عوض 19%)
+- بلا ضريبة استهلاك
+- بلا فينيات
+
+**الشروط**
+- كرهبة كهربائية 100% ولا هيبريد يتشارج
+- جديدة ولا مستعملة أقل من 3 سنين
+- لازم المصادقة التقنية
+
+**التوفير**
+- على كرهبة بـ 30,000€:
+- النظام العادي: ~75,000 دينار ضرائب
+- كهربائية: ~7,000 دينار ضرائب
+- توفير: ~68,000 دينار!`,
+    },
+    charging_stations: {
+      french: `**Bornes de recharge en Tunisie**
+
+**Réseau actuel**
+- STEG: stations principales (Tunis, Sousse, Sfax)
+- Total Energies: stations-service sélectionnées
+- Hotels et centres commerciaux: bornes privées
+
+**Types de charge**
+- Lente (Type 2): 7-22 kW, 4-8h pour charge complète
+- Rapide (DC): 50-150 kW, 30-60 min pour 80%
+
+**Coût moyen**
+- STEG: ~0.200 TND/kWh
+- Privé: ~0.300-0.500 TND/kWh
+- À domicile: ~0.180 TND/kWh (tarif nuit)
+
+**Conseils**
+- Installez une wallbox à domicile (2,000-4,000 TND)
+- Utilisez l'app PlugShare pour trouver les bornes
+- Planifiez les longs trajets à l'avance
+
+**Développement prévu**
+- 200+ bornes rapides d'ici 2025
+- Autoroutes couvertes à 100%`,
+      arabic: `**محطات الشحن في تونس**
+
+**الشبكة الحالية**
+- STEG: المحطات الرئيسية (تونس، سوسة، صفاقس)
+- Total Energies: محطات وقود مختارة
+- فنادق ومراكز تجارية: شواحن خاصة
+
+**أنواع الشحن**
+- بطيء (Type 2): 7-22 kW، 4-8 ساعات للشحن الكامل
+- سريع (DC): 50-150 kW، 30-60 دقيقة لـ 80%
+
+**التكلفة المتوسطة**
+- STEG: ~0.200 دينار/kWh
+- خاص: ~0.300-0.500 دينار/kWh
+- في البيت: ~0.180 دينار/kWh (تعريفة الليل)
+
+**نصائح**
+- ركب wallbox في الدار (2,000-4,000 دينار)
+- استعمل تطبيق PlugShare لإيجاد الشواحن
+- خطط للمسافات الطويلة مسبقاً`,
+      derja: `**محطات الشحن في تونس**
+
+**الشبكة الحالية**
+- STEG: المحطات الكبار (تونس، سوسة، صفاقس)
+- Total: بعض محطات البنزين
+- هوتيلات وسنترات: شواحن خاصة
+
+**أنواع الشحن**
+- بطيء: 4-8 سوايع للشحن الكامل
+- سريع: 30-60 دقيقة لـ 80%
+
+**السوم**
+- STEG: ~0.200 دينار/kWh
+- خاص: ~0.300-0.500 دينار/kWh
+- في الدار: ~0.180 دينار/kWh (تعريفة الليل)
+
+**نصايح**
+- ركب شاحن في دارك (2,000-4,000 دينار)
+- استعمل PlugShare باش تلقى الشواحن`,
+    },
+    solar_panels: {
+      french: `**Panneaux solaires pour recharge**
+
+**Installation recommandée**
+- 3-6 kWc pour une voiture électrique
+- Coût: 8,000-15,000 TND (après subvention STEG)
+- Production: 4,500-9,000 kWh/an
+
+**Économies**
+- Recharge gratuite à vie (après amortissement)
+- Amortissement: 4-6 ans
+- Surplus vendu à STEG
+
+**Avantages combinés**
+- Indépendance énergétique
+- Empreinte carbone quasi-nulle
+- Protection contre hausse des prix
+
+**Procédure**
+1. Demande STEG pour raccordement
+2. Installation par installateur agréé
+3. Compteur bidirectionnel
+4. Contrat injection réseau
+
+**Conseil**
+Dimensionnez pour couvrir maison + voiture pour maximiser les économies.`,
+      arabic: `**الألواح الشمسية للشحن**
+
+**التركيب الموصى به**
+- 3-6 kWc لسيارة كهربائية
+- التكلفة: 8,000-15,000 دينار (بعد دعم STEG)
+- الإنتاج: 4,500-9,000 kWh/سنة
+
+**التوفير**
+- شحن مجاني مدى الحياة (بعد الاسترداد)
+- الاسترداد: 4-6 سنوات
+- الفائض يُباع لـ STEG
+
+**الفوائد المجمعة**
+- استقلالية في الطاقة
+- بصمة كربونية شبه معدومة
+- حماية من ارتفاع الأسعار
+
+**الإجراءات**
+1. طلب STEG للربط
+2. تركيب من مركب معتمد
+3. عداد ثنائي الاتجاه
+4. عقد حقن في الشبكة`,
+      derja: `**الپانو سولار للشحن**
+
+**التركيب اللازم**
+- 3-6 kWc لكرهبة كهربائية
+- السوم: 8,000-15,000 دينار (بعد دعم STEG)
+- الإنتاج: 4,500-9,000 kWh/عام
+
+**التوفير**
+- شحن ببلاش العمر الكل (بعد ما ترجع فلوسك)
+- ترجع فلوسك في 4-6 سنين
+- الزايد تبيعو لـ STEG
+
+**الفوائد**
+- ما تعتمدش على حد في الطاقة
+- بيئي 100%
+- محمي من ارتفاع الأسعار
+
+**الإجراءات**
+1. طلب STEG للربط
+2. تركيب من فني معتمد
+3. كونتور ثنائي
+4. عقد بيع الفائض`,
+    },
+  };
+
+  const detail = details[topic]?.[language] || details[topic]?.french || '';
+
+  // Add transition question
+  const transitionQuestion: Record<Language, string> = {
+    french: `\n\nVoulez-vous chercher une voiture électrique?
+1. Oui
+2. Non, retour au menu`,
+    arabic: `\n\nتحب تلقى كرهبة كهربائية؟
+1. نعم
+2. لا، رجوع للقائمة`,
+    derja: `\n\nتحب تلقى كرهبة كهربائية؟
 1. إيه
 2. لا، نرجع للقائمة`,
   };

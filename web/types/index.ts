@@ -2,6 +2,7 @@
 
 export type ConversationState =
   | 'goal_selection'
+  | 'asking_car_origin'
   | 'asking_residency'
   | 'asking_fcr_famille'
   | 'asking_fuel_type'
@@ -16,9 +17,27 @@ export type ConversationState =
   | 'showing_calculation'
   // Procedure info flow
   | 'procedure_info'
-  | 'showing_procedure_detail';
+  | 'showing_procedure_detail'
+  // Compare cars flow
+  | 'car_comparison_input'
+  | 'showing_comparison'
+  // EV info flow
+  | 'ev_topic_selection'
+  | 'showing_ev_info'
+  // Browse offers flow
+  | 'browse_origin_selection'
+  // Popular cars flow
+  | 'popular_cars_selection'
+  | 'asking_popular_eligibility'
+  | 'showing_popular_models';
 
-export type Goal = 'find_car' | 'calculate_cost' | 'procedure';
+export type Goal =
+  | 'find_car'
+  | 'procedure'
+  | 'compare_cars'
+  | 'ev_info'
+  | 'browse_offers'
+  | 'popular_cars';
 export type Residency = 'local' | 'abroad';
 export type FuelPreference = 'essence' | 'diesel' | 'hybrid' | 'hybrid_rechargeable' | 'electric' | 'any';
 export type CarTypePreference = 'suv' | 'sedan' | 'compact' | 'any';
@@ -50,6 +69,9 @@ export interface CarResult {
   url: string;
   fcr_tre_eligible: boolean;
   fcr_famille_eligible: boolean;
+  source?: string;
+  full_name?: string;
+  seller_type?: string;
 }
 
 export interface ScoredCarResult extends CarResult {
@@ -89,6 +111,7 @@ export interface FCRComparison {
 export interface ChatRequest {
   message: string;
   conversation_id?: string;
+  language?: Language;
   user_context?: {
     residency_status?: 'tre' | 'resident';
     years_abroad?: number;

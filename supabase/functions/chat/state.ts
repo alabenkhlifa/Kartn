@@ -1,5 +1,5 @@
 import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { Conversation, ConversationState, Goal, Language, CarOrigin, Residency, FuelPreference, CarTypePreference, ConditionPreference, CalcFuelType, ProcedureType } from './types.ts';
+import { Conversation, ConversationState, Goal, Language, CarOrigin, Residency, FuelPreference, CarTypePreference, ConditionPreference, CalcFuelType, ProcedureType, EVTopic } from './types.ts';
 
 /**
  * Get or create a conversation
@@ -32,6 +32,8 @@ export async function getOrCreateConversation(
         calc_engine_cc: data.calc_engine_cc ?? null,
         calc_fuel_type: data.calc_fuel_type as CalcFuelType | null,
         selected_procedure: data.selected_procedure as ProcedureType | null,
+        selected_ev_topic: data.selected_ev_topic as EVTopic | null,
+        comparison_query: data.comparison_query ?? null,
       };
     }
   }
@@ -63,6 +65,8 @@ export async function getOrCreateConversation(
     calc_engine_cc: null,
     calc_fuel_type: null,
     selected_procedure: null,
+    selected_ev_topic: null,
+    comparison_query: null,
   };
 }
 
@@ -91,6 +95,12 @@ export async function updateConversation(
  *
  * Tunisia flow: car_origin → condition → budget → fuel → car_type → cars
  * Import flow: car_origin → residency → fcr_famille (if local) → fuel → car_type → condition → budget → cars
+ *
+ * New flows:
+ * Compare cars: car_comparison_input → showing_comparison
+ * EV info: ev_topic_selection → showing_ev_info
+ * Browse offers: same as find_car flow
+ * Popular cars: popular_cars_selection → (eligibility check OR models)
  */
 export function getNextState(
   currentState: ConversationState,
@@ -109,15 +119,21 @@ export function getNextState(
     hasCalcFuel?: boolean;
     hasProcedure?: boolean;
     transitionToCars?: boolean;
+    hasComparisonQuery?: boolean;
+    hasEVTopic?: boolean;
+    popularSelection?: 'eligibility' | 'models';
   }
 ): ConversationState {
-  const { goal, carOrigin, residency, isTunisiaFlow, hasFcrFamille, hasFuelType, hasCarType, hasCondition, hasBudget, hasCalcPrice, hasCalcEngine, hasCalcFuel, hasProcedure, transitionToCars } = options || {};
+  const { goal, carOrigin, residency, isTunisiaFlow, hasFcrFamille, hasFuelType, hasCarType, hasCondition, hasBudget, hasCalcPrice, hasCalcEngine, hasCalcFuel, hasProcedure, transitionToCars, hasComparisonQuery, hasEVTopic, popularSelection } = options || {};
 
   switch (currentState) {
     case 'goal_selection':
       if (goal === 'find_car') return 'asking_car_origin';
-      if (goal === 'calculate_cost') return 'asking_calc_price';
       if (goal === 'procedure') return 'procedure_info';
+      if (goal === 'compare_cars') return 'car_comparison_input';
+      if (goal === 'ev_info') return 'ev_topic_selection';
+      if (goal === 'browse_offers') return 'asking_car_origin'; // Same wizard as find_car
+      if (goal === 'popular_cars') return 'popular_cars_selection';
       return 'goal_selection';
 
     case 'asking_car_origin':
@@ -198,6 +214,43 @@ export function getNextState(
       if (transitionToCars) return 'asking_car_origin';
       return 'goal_selection';
 
+    // Compare cars flow
+    case 'car_comparison_input':
+      if (hasComparisonQuery) return 'showing_comparison';
+      return 'car_comparison_input';
+
+    case 'showing_comparison':
+      if (transitionToCars) return 'asking_car_origin';
+      return 'goal_selection';
+
+    // EV info flow
+    case 'ev_topic_selection':
+      if (hasEVTopic) return 'showing_ev_info';
+      return 'ev_topic_selection';
+
+    case 'showing_ev_info':
+      if (transitionToCars) return 'asking_car_origin';
+      return 'goal_selection';
+
+    // Browse offers flow uses same states as find_car
+    case 'browse_origin_selection':
+      if (carOrigin === 'tunisia') return 'asking_condition';
+      if (carOrigin === 'abroad') return 'asking_residency';
+      return 'browse_origin_selection';
+
+    // Popular cars flow
+    case 'popular_cars_selection':
+      if (popularSelection === 'eligibility') return 'asking_popular_eligibility';
+      if (popularSelection === 'models') return 'showing_popular_models';
+      return 'popular_cars_selection';
+
+    case 'asking_popular_eligibility':
+      return 'goal_selection'; // After showing eligibility result
+
+    case 'showing_popular_models':
+      if (transitionToCars) return 'asking_car_origin';
+      return 'goal_selection';
+
     default:
       return 'goal_selection';
   }
@@ -220,5 +273,10 @@ export function needsQuestion(state: ConversationState): boolean {
     'asking_calc_engine',
     'asking_calc_fuel',
     'procedure_info',
+    'car_comparison_input',
+    'ev_topic_selection',
+    'browse_origin_selection',
+    'popular_cars_selection',
+    'asking_popular_eligibility',
   ].includes(state);
 }

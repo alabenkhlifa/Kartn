@@ -86,6 +86,25 @@ export const FCR_LIMITS = {
   },
 };
 
+// Shipping costs by country (EUR) - used by recommend function
+export const SHIPPING_COSTS_EUR: Record<string, number> = {
+  DE: 1000,  // Germany - most common, good logistics
+  FR: 1200,  // France - slightly higher
+  BE: 1100,  // Belgium - similar to Germany
+  IT: 1500,  // Italy - longer route
+};
+
+// Local fees in TND - used by recommend function
+export const LOCAL_FEES = {
+  port_handling: 400,
+  transitaire: 800,
+  registration: 500,
+  inspection: 150,
+};
+
+// Transit insurance rate (% of car price)
+export const TRANSIT_INSURANCE_RATE = 0.015; // 1.5%
+
 // System prompts
 export const SYSTEM_PROMPTS = {
   classifier: `You are a query classifier for KarTN, a Tunisian car purchasing assistant.

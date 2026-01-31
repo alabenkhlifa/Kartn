@@ -1,5 +1,32 @@
 # Conversation Flow
 
+## WELCOME & LANGUAGE_SELECTION
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         [CAR ICON]                          │
+│                                                             │
+│              Bienvenue sur KarTN | مرحبا بيك في KarTN       │
+│                                                             │
+│    Votre assistant intelligent pour l'importation           │
+│    automobile en Tunisie                                    │
+│    مساعدك الذكي لاستيراد السيارات في تونس                   │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                   CHOISIR LA LANGUE                         │
+│                      اختار اللغة                            │
+│                                                             │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
+│  │  Français   │  │   العربية   │  │    تونسي    │         │
+│  │             │  │   (Arabic)  │  │   (Derja)   │         │
+│  └─────────────┘  └─────────────┘  └─────────────┘         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+                       GOAL_SELECTION
+```
+
 ## GOAL_SELECTION
 
 ```
@@ -23,8 +50,12 @@ GOAL_SELECTION
 
 ## END_CONVERSATION
 
-- Shows "New Conversation" button
-- User cannot continue, must start fresh
+After showing info, offer transition:
+```
+"Ready to find a car?"
+├── Yes → Go to Option 1 (Buy a car) or Option 5 (Browse offers)
+└── No  → Show "New Conversation" button
+```
 
 ## Option 1: Buy a Car
 
@@ -55,11 +86,11 @@ GOAL_SELECTION
                │               │
                │               ▼
                │       BUDGET_SELECTION
+               │       (50k, 70k, 90k, 120k, 150k, 200k, 300k+)
                │               │
                │               ▼
                │       SHOW_RESULTS (5 cars)
                │       - Score (x/100 matching needs)
-               │       - Photo (if available)
                │       - Price, year, mileage, etc.
                │       - Expandable for more details
                │       - Link to original offer
@@ -232,11 +263,11 @@ GOAL_SELECTION
                                │
                                ▼
                      BUDGET_SELECTION
+                     (50k, 70k, 90k, 120k, 150k, 200k, 300k+)
                                │
                                ▼
                       SHOW_RESULTS (5 cars)
                       - Score (x/100 matching needs)
-                      - Photo (if available)
                       - Price, year, mileage, etc.
                       - Expandable for more details
                       - Link to original offer

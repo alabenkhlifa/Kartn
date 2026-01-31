@@ -13,14 +13,14 @@
 
 ### Sections
 
-| Section                    | URL                                      | Content                    |
-|----------------------------|------------------------------------------|----------------------------|
-| New car prices             | /fr/neuf                                 | Prices by brand            |
-| Used car classifieds       | /fr/occasion                             | Private sales              |
-| FCR guide                  | /fr/guide/fcr.html                       | Import procedures          |
-| Voiture Populaire guide    | /fr/guide/voitures-populaires.html       | Subsidized car program     |
-| Customs duties calculator  | /fr/guide/droits-de-douanes.html         | Tax estimation             |
-| Official dealers list      | /fr/neuf/concessionnaires                | All concessionnaires       |
+| Section                   | URL                                | Content                |
+|---------------------------|------------------------------------|------------------------|
+| New car prices            | /fr/neuf                           | Prices by brand        |
+| Used car classifieds      | /fr/occasion                       | Private sales          |
+| FCR guide                 | /fr/guide/fcr.html                 | Import procedures      |
+| Voiture Populaire guide   | /fr/guide/voitures-populaires.html | Subsidized car program |
+| Customs duties calculator | /fr/guide/droits-de-douanes.html   | Tax estimation         |
+| Official dealers list     | /fr/neuf/concessionnaires          | All concessionnaires   |
 
 ---
 
@@ -28,7 +28,8 @@
 
 ### European Brands
 
-Audi, BMW, Mercedes, Volkswagen, Peugeot, Renault, Citroën, Fiat, Opel, Seat, Skoda, Volvo, Mini, Alfa Romeo, Jaguar, Land Rover, Porsche, Cupra
+Audi, BMW, Mercedes, Volkswagen, Peugeot, Renault, Citroën, Fiat, Opel, Seat, Skoda, Volvo, Mini, Alfa Romeo, Jaguar,
+Land Rover, Porsche, Cupra
 
 ### Asian Brands
 
@@ -63,10 +64,10 @@ BYD, Chery, Geely, Changan, GWM (Great Wall), MG, GAC, JAC, Jetour, Omoda/Jaecoo
 
 ## Other Tunisian Car Marketplaces
 
-| Source        | URL           | Content                                  |
-|---------------|---------------|------------------------------------------|
-| tayara.tn     | tayara.tn     | Used car classifieds                     |
-| automax.tn    | automax.tn    | Used cars, voiture populaire info        |
+| Source     | URL        | Content                           |
+|------------|------------|-----------------------------------|
+| tayara.tn  | tayara.tn  | Used car classifieds              |
+| automax.tn | automax.tn | Used cars, voiture populaire info |
 
 ---
 
@@ -74,21 +75,19 @@ BYD, Chery, Geely, Changan, GWM (Great Wall), MG, GAC, JAC, Jetour, Omoda/Jaecoo
 
 ### Country-Specific Sites
 
-| Country | Site           | Notes              |
-|---------|----------------|--------------------|
-| Germany | mobile.de      | Largest EU market  |
-| Germany | autoscout24.de | Good filters       |
-| France  | leboncoin.fr   | Private sellers    |
-| France  | lacentrale.fr  | Dealers            |
-| Belgium | 2ememain.be    | French-speaking    |
-| Italy   | subito.it      | Competitive prices |
+| Country | Site           | Notes        |
+|---------|----------------|--------------|
+| Germany | autoscout24.de | Good filters |
+| France  | autoscout24.fr | Good filters |
+| Belgium | autoscout24.be | Good filters |
+| Italy   | autoscout24.it | Good filters |
 
 ### Pan-European Sites
 
-| Site            | URL              | Notes                           |
-|-----------------|------------------|---------------------------------|
-| AutoScout24     | autoscout24.com  | Multi-country search            |
-| CarVertical     | carvertical.com  | Vehicle history checks          |
+| Site        | URL             | Notes                  |
+|-------------|-----------------|------------------------|
+| AutoScout24 | autoscout24.com | Multi-country search   |
+| CarVertical | carvertical.com | Vehicle history checks |
 
 ---
 

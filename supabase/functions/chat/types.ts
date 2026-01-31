@@ -16,9 +16,27 @@ export type ConversationState =
   | 'showing_calculation'
   // Procedure info flow
   | 'procedure_info'
-  | 'showing_procedure_detail';
+  | 'showing_procedure_detail'
+  // Compare cars flow
+  | 'car_comparison_input'
+  | 'showing_comparison'
+  // EV info flow
+  | 'ev_topic_selection'
+  | 'showing_ev_info'
+  // Browse offers flow (uses same wizard as find_car)
+  | 'browse_origin_selection'
+  // Popular cars flow
+  | 'popular_cars_selection'
+  | 'asking_popular_eligibility'
+  | 'showing_popular_models';
 
-export type Goal = 'find_car' | 'calculate_cost' | 'procedure';
+export type Goal =
+  | 'find_car'
+  | 'procedure'
+  | 'compare_cars'
+  | 'ev_info'
+  | 'browse_offers'
+  | 'popular_cars';
 export type CarOrigin = 'tunisia' | 'abroad';
 export type Residency = 'local' | 'abroad';
 export type FuelPreference = 'essence' | 'diesel' | 'hybrid' | 'hybrid_rechargeable' | 'electric' | 'any';
@@ -26,7 +44,9 @@ export type CarTypePreference = 'suv' | 'sedan' | 'compact' | 'any';
 export type ConditionPreference = 'new' | 'used' | 'any';
 
 export type CalcFuelType = 'essence' | 'diesel' | 'electric';
-export type ProcedureType = 'fcr_tre' | 'fcr_famille' | 'achat_local';
+export type ProcedureType = 'fcr_tre' | 'fcr_famille';
+
+export type EVTopic = 'hybrid_vs_ev' | 'ev_law' | 'charging_stations' | 'solar_panels';
 
 export interface Conversation {
   id: string;
@@ -46,6 +66,10 @@ export interface Conversation {
   calc_fuel_type: CalcFuelType | null;
   // Procedure flow field
   selected_procedure: ProcedureType | null;
+  // EV info flow field
+  selected_ev_topic: EVTopic | null;
+  // Compare cars flow field
+  comparison_query: string | null;
 }
 
 // Intent types for query classification
@@ -173,6 +197,7 @@ export interface RetrievalContext {
 export interface ChatRequest {
   message: string;
   conversation_id?: string;
+  language?: Language;
   user_context?: {
     residency_status?: 'tre' | 'resident';
     years_abroad?: number;

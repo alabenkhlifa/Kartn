@@ -1,22 +1,49 @@
-import { Goal, CarOrigin, Residency, FuelPreference, CarTypePreference, ConditionPreference, CalcFuelType, ProcedureType } from './types.ts';
+import { Goal, CarOrigin, Residency, FuelPreference, CarTypePreference, ConditionPreference, CalcFuelType, ProcedureType, EVTopic } from './types.ts';
 
 /**
  * Parse goal selection from user input
- * Accepts: "1", "2", "3", or keywords
+ * Accepts: "1"-"6", or keywords
+ *
+ * New order (per design):
+ * 1. Acheter une voiture → find_car
+ * 2. Procédures FCR → procedure
+ * 3. Comparer des voitures → compare_cars
+ * 4. Infos véhicules électriques → ev_info
+ * 5. Parcourir les offres → browse_offers
+ * 6. Voitures populaires → popular_cars
  */
 export function parseGoal(input: string): Goal | null {
   const trimmed = input.trim().toLowerCase();
   const firstChar = trimmed.charAt(0);
 
-  // Numeric selection
-  if (firstChar === '1' || trimmed.includes('trouver') || trimmed.includes('cherche') || trimmed.includes('voiture')) {
+  // 1. Acheter une voiture / Buy a car
+  if (firstChar === '1' || trimmed.includes('acheter') || trimmed.includes('cherche') || trimmed.includes('تشري') || trimmed.includes('شراء')) {
     return 'find_car';
   }
-  if (firstChar === '2' || trimmed.includes('calcul') || trimmed.includes('coût') || trimmed.includes('prix')) {
-    return 'calculate_cost';
-  }
-  if (firstChar === '3' || trimmed.includes('procédure') || trimmed.includes('comment') || trimmed.includes('étape')) {
+  // 2. Procédures FCR
+  if (firstChar === '2' || trimmed.includes('procédure') || trimmed.includes('fcr') || trimmed.includes('إجراءات')) {
     return 'procedure';
+  }
+  // 3. Comparer des voitures
+  if (firstChar === '3' || trimmed.includes('compar') || trimmed.includes('vs') || trimmed.includes('مقارن') || trimmed.includes('تقارن')) {
+    return 'compare_cars';
+  }
+  // 4. Infos véhicules électriques
+  if (firstChar === '4' || trimmed.includes('électrique') || trimmed.includes('ev') || trimmed.includes('كهربائ')) {
+    return 'ev_info';
+  }
+  // 5. Parcourir les offres / Browse offers
+  if (firstChar === '5' || trimmed.includes('parcourir') || trimmed.includes('offre') || trimmed.includes('تصفح') || trimmed.includes('عروض') || trimmed.includes('تشوف')) {
+    return 'browse_offers';
+  }
+  // 6. Voitures populaires
+  if (firstChar === '6' || trimmed.includes('populaire') || trimmed.includes('subvention') || trimmed.includes('شعبي') || trimmed.includes('مدعوم')) {
+    return 'popular_cars';
+  }
+
+  // Fallback keyword matching for common terms (not tied to numbers)
+  if (trimmed.includes('voiture') || trimmed.includes('كرهبة')) {
+    return 'find_car';
   }
 
   return null;
@@ -64,17 +91,20 @@ export function parseResidency(input: string): Residency | null {
 
 /**
  * Parse budget from user input
- * Accepts: "1", "2", "3", "4", or numeric values like "70000", "70k", "70 000"
+ * Accepts: "1"-"7", or numeric values like "70000", "70k", "70 000"
  */
 export function parseBudget(input: string): number | null {
   const trimmed = input.trim().toLowerCase();
   const firstChar = trimmed.charAt(0);
 
-  // Preset selections
+  // Preset selections (7 options)
   if (firstChar === '1') return 50000;
   if (firstChar === '2') return 70000;
   if (firstChar === '3') return 90000;
   if (firstChar === '4') return 120000;
+  if (firstChar === '5') return 150000;
+  if (firstChar === '6') return 200000;
+  if (firstChar === '7') return 300000;
 
   // Parse numeric value
   // Remove spaces, handle "k" suffix
@@ -335,7 +365,7 @@ export function parseYesNo(input: string): boolean | null {
 }
 
 /**
- * Parse procedure selection (1=fcr_tre, 2=fcr_famille, 3=achat_local)
+ * Parse procedure selection (1=fcr_tre, 2=fcr_famille)
  * Handles both numbers and text
  */
 export function parseProcedure(input: string): ProcedureType | null {
@@ -345,7 +375,6 @@ export function parseProcedure(input: string): ProcedureType | null {
   // Numeric selection
   if (firstChar === '1') return 'fcr_tre';
   if (firstChar === '2') return 'fcr_famille';
-  if (firstChar === '3') return 'achat_local';
 
   // Keyword matching - FCR TRE
   if (trimmed.includes('fcr tre') || trimmed.includes('tre') || trimmed.includes('توريد') || trimmed.includes('import') || trimmed.includes('étranger') || trimmed.includes('خارج')) {
@@ -357,10 +386,65 @@ export function parseProcedure(input: string): ProcedureType | null {
     return 'fcr_famille';
   }
 
-  // Keyword matching - Achat local
-  if (trimmed.includes('local') || trimmed.includes('tunisie') || trimmed.includes('محلي') || trimmed.includes('تونس') || trimmed.includes('achat')) {
-    return 'achat_local';
+  return null;
+}
+
+/**
+ * Parse EV topic selection (1=hybrid_vs_ev, 2=ev_law, 3=charging_stations, 4=solar_panels)
+ */
+export function parseEVTopic(input: string): EVTopic | null {
+  const trimmed = input.trim().toLowerCase();
+  const firstChar = trimmed.charAt(0);
+
+  // Numeric selection
+  if (firstChar === '1') return 'hybrid_vs_ev';
+  if (firstChar === '2') return 'ev_law';
+  if (firstChar === '3') return 'charging_stations';
+  if (firstChar === '4') return 'solar_panels';
+
+  // Keyword matching
+  if (trimmed.includes('différence') || trimmed.includes('hybrid') || trimmed.includes('phev') || trimmed.includes('فرق') || trimmed.includes('هيبريد')) {
+    return 'hybrid_vs_ev';
   }
+  if (trimmed.includes('loi') || trimmed.includes('law') || trimmed.includes('قانون') || trimmed.includes('fiscal')) {
+    return 'ev_law';
+  }
+  if (trimmed.includes('borne') || trimmed.includes('recharge') || trimmed.includes('charging') || trimmed.includes('شحن') || trimmed.includes('محطات')) {
+    return 'charging_stations';
+  }
+  if (trimmed.includes('solaire') || trimmed.includes('solar') || trimmed.includes('panneau') || trimmed.includes('شمس') || trimmed.includes('پانو')) {
+    return 'solar_panels';
+  }
+
+  return null;
+}
+
+/**
+ * Parse popular cars selection (1=eligibility check, 2=see models)
+ */
+export function parsePopularCarsSelection(input: string): 'eligibility' | 'models' | null {
+  const trimmed = input.trim().toLowerCase();
+  const firstChar = trimmed.charAt(0);
+
+  if (firstChar === '1' || trimmed.includes('éligib') || trimmed.includes('vérif') || trimmed.includes('أهلي') || trimmed.includes('تثبت')) {
+    return 'eligibility';
+  }
+  if (firstChar === '2' || trimmed.includes('modèle') || trimmed.includes('voir') || trimmed.includes('موديل') || trimmed.includes('شوف')) {
+    return 'models';
+  }
+
+  return null;
+}
+
+/**
+ * Parse salary level for popular car eligibility (1=under 1500, 2=over 1500)
+ */
+export function parseSalaryLevel(input: string): 'eligible' | 'not_eligible' | null {
+  const trimmed = input.trim().toLowerCase();
+  const firstChar = trimmed.charAt(0);
+
+  if (firstChar === '1') return 'eligible';
+  if (firstChar === '2') return 'not_eligible';
 
   return null;
 }

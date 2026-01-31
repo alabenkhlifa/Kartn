@@ -1,7 +1,11 @@
 export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
 export const CHAT_ENDPOINT = `${SUPABASE_URL}/functions/v1/chat`;
+export const RECOMMEND_ENDPOINT = `${SUPABASE_URL}/functions/v1/recommend`;
 
 export const CONVERSATION_ID_KEY = 'kartn_conversation_id';
+export const LANGUAGE_KEY = 'kartn_language';
+
+export type UILanguage = 'french' | 'arabic' | 'derja';
 
 export const EXCHANGE_RATE = {
   eur_to_tnd: 3.35,
@@ -51,6 +55,13 @@ export const OPTION_EMOJIS: Record<string, string> = {
   '150k': '💰',
   '200k': '💎',
   '300k': '💎',
+  // New goal types
+  'comparer': '⚖️',
+  'compare': '⚖️',
+  'électrique': '⚡',
+  'ev': '⚡',
+  'populaire': '⭐',
+  'subvention': '⭐',
 };
 
 // Get emoji for an option text

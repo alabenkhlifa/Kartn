@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { ParsedOption } from '@/types';
 import { useChat } from '@/hooks/useChat';
+import { UILanguage } from '@/lib/constants';
 import MessageList from './MessageList';
 import InputArea from './InputArea';
 import WelcomeScreen from '@/components/welcome/WelcomeScreen';
@@ -20,8 +21,8 @@ export default function ChatContainer() {
   );
 
   const handleFAQClick = useCallback(
-    (message: string) => {
-      sendUserMessage(message);
+    (message: string, language?: UILanguage) => {
+      sendUserMessage(message, language);
     },
     [sendUserMessage]
   );

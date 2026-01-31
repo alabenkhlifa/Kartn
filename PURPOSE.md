@@ -215,7 +215,7 @@ GitHub Actions (Scraping) → Public JSON/CSV → Supabase Edge Functions → Po
 CREATE TABLE cars
 (
     id           SERIAL PRIMARY KEY,
-    source       VARCHAR(50), -- automobile.tn, mobile.de, etc.
+    source       VARCHAR(50), -- automobile.tn, etc.
     brand        VARCHAR(100),
     model        VARCHAR(100),
     trim         VARCHAR(255),

@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
-import { Message } from '@/types';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { Message, Language } from '@/types';
 import { sendMessage, generateMessageId } from '@/lib/api';
 import { useLocalStorage } from './useLocalStorage';
-import { CONVERSATION_ID_KEY } from '@/lib/constants';
+import { CONVERSATION_ID_KEY, LANGUAGE_KEY, UILanguage } from '@/lib/constants';
 
 interface UseChatReturn {
   messages: Message[];
   isLoading: boolean;
   error: string | null;
   conversationId: string | null;
-  sendUserMessage: (content: string) => Promise<void>;
+  sendUserMessage: (content: string, language?: UILanguage) => Promise<void>;
   clearConversation: () => void;
 }
 
@@ -26,8 +26,16 @@ export function useChat(): UseChatReturn {
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // Clear stale conversation ID when WelcomeScreen is shown (messages empty)
+  // Always clear conversation ID when messages are empty to ensure fresh start
+  useEffect(() => {
+    if (messages.length === 0) {
+      clearConversationId();
+    }
+  }, [messages.length, clearConversationId]);
+
   const sendUserMessage = useCallback(
-    async (content: string) => {
+    async (content: string, language?: UILanguage) => {
       if (!content.trim() || isLoading) return;
 
       // Cancel any pending request
@@ -49,9 +57,15 @@ export function useChat(): UseChatReturn {
       setError(null);
 
       try {
+        // Get language from localStorage if not provided
+        const effectiveLanguage = language ||
+          (typeof window !== 'undefined' ? localStorage.getItem(LANGUAGE_KEY) as Language : null) ||
+          undefined;
+
         const response = await sendMessage({
           message: content.trim(),
           conversation_id: conversationId || undefined,
+          language: effectiveLanguage,
         });
 
         // Save conversation ID
