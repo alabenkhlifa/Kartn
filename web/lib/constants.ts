@@ -58,7 +58,6 @@ export const OPTION_EMOJIS: Record<string, string> = {
   // New goal types
   'comparer': '⚖️',
   'compare': '⚖️',
-  'électrique': '⚡',
   'ev': '⚡',
   'populaire': '⭐',
   'subvention': '⭐',
