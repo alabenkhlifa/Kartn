@@ -494,6 +494,33 @@ Deno.serve(async (req) => {
       }
 
       case 'showing_calculation': {
+        // First check yes/no response to the transition question
+        // This must come BEFORE parseGoal to avoid "1" being interpreted as find_car goal
+        const ready = parseYesNo(message);
+        if (ready === true) {
+          newState = 'asking_car_origin';
+          await updateConversation(conversation.id, {
+            state: newState,
+            goal: 'find_car',
+            // Reset calc fields for fresh car search
+            calc_price_eur: null,
+            calc_engine_cc: null,
+            calc_fuel_type: null,
+          }, supabase);
+          responseMessage = getTemplate('asking_car_origin', language);
+          break;
+        } else if (ready === false) {
+          newState = 'goal_selection';
+          await updateConversation(conversation.id, {
+            state: newState,
+            calc_price_eur: null,
+            calc_engine_cc: null,
+            calc_fuel_type: null,
+          }, supabase);
+          responseMessage = getTemplate('goal_selection', language);
+          break;
+        }
+
         // Check if user is trying to start a new search (goal-like message)
         const newGoalFromCalc = parseGoal(message);
         if (newGoalFromCalc || isGreeting(message) || isReset(message)) {
@@ -534,43 +561,19 @@ Deno.serve(async (req) => {
           });
         }
 
-        // User has seen calculation, now answering "ready to find car?"
-        const ready = parseYesNo(message);
-        if (ready === true) {
-          newState = 'asking_car_origin';
-          await updateConversation(conversation.id, {
-            state: newState,
-            goal: 'find_car',
-            // Reset calc fields for fresh car search
-            calc_price_eur: null,
-            calc_engine_cc: null,
-            calc_fuel_type: null,
-          }, supabase);
-          responseMessage = getTemplate('asking_car_origin', language);
-        } else if (ready === false) {
-          newState = 'goal_selection';
-          await updateConversation(conversation.id, {
-            state: newState,
-            calc_price_eur: null,
-            calc_engine_cc: null,
-            calc_fuel_type: null,
-          }, supabase);
-          responseMessage = getTemplate('goal_selection', language);
-        } else {
-          // Re-show the transition question
-          const retryMessage: Record<Language, string> = {
-            french: `Voulez-vous chercher une voiture maintenant?
+        // Re-show the transition question for unrecognized input
+        const retryMessageCalc: Record<Language, string> = {
+          french: `Voulez-vous chercher une voiture maintenant?
 1. Oui
 2. Non, retour au menu`,
-            arabic: `تحب تلقى كرهبة توا؟
+          arabic: `تحب تلقى كرهبة توا؟
 1. نعم
 2. لا، رجوع للقائمة`,
-            derja: `تحب تلقى كرهبة توا؟
+          derja: `تحب تلقى كرهبة توا؟
 1. إيه
 2. لا، نرجع للقائمة`,
-          };
-          responseMessage = retryMessage[language];
-        }
+        };
+        responseMessage = retryMessageCalc[language];
         break;
       }
 
@@ -591,6 +594,28 @@ Deno.serve(async (req) => {
       }
 
       case 'showing_procedure_detail': {
+        // First check yes/no response to the transition question
+        // This must come BEFORE parseGoal to avoid "1" being interpreted as find_car goal
+        const readyFromProcedure = parseYesNo(message);
+        if (readyFromProcedure === true) {
+          newState = 'asking_car_origin';
+          await updateConversation(conversation.id, {
+            state: newState,
+            goal: 'find_car',
+            selected_procedure: null,
+          }, supabase);
+          responseMessage = getTemplate('asking_car_origin', language);
+          break;
+        } else if (readyFromProcedure === false) {
+          newState = 'goal_selection';
+          await updateConversation(conversation.id, {
+            state: newState,
+            selected_procedure: null,
+          }, supabase);
+          responseMessage = getTemplate('goal_selection', language);
+          break;
+        }
+
         // Check if user is trying to start a new search (goal-like message)
         const newGoalFromProcedure = parseGoal(message);
         if (newGoalFromProcedure || isGreeting(message) || isReset(message)) {
@@ -629,38 +654,19 @@ Deno.serve(async (req) => {
           });
         }
 
-        // User has seen procedure details, now answering "ready to find car?"
-        const readyFromProcedure = parseYesNo(message);
-        if (readyFromProcedure === true) {
-          newState = 'asking_car_origin';
-          await updateConversation(conversation.id, {
-            state: newState,
-            goal: 'find_car',
-            selected_procedure: null,
-          }, supabase);
-          responseMessage = getTemplate('asking_car_origin', language);
-        } else if (readyFromProcedure === false) {
-          newState = 'goal_selection';
-          await updateConversation(conversation.id, {
-            state: newState,
-            selected_procedure: null,
-          }, supabase);
-          responseMessage = getTemplate('goal_selection', language);
-        } else {
-          // Re-show the transition question
-          const retryMessage: Record<Language, string> = {
-            french: `Voulez-vous chercher une voiture maintenant?
+        // Re-show the transition question for unrecognized input
+        const retryMessageProcedure: Record<Language, string> = {
+          french: `Voulez-vous chercher une voiture maintenant?
 1. Oui
 2. Non, retour au menu`,
-            arabic: `تحب تلقى كرهبة توا؟
+          arabic: `تحب تلقى كرهبة توا؟
 1. نعم
 2. لا، رجوع للقائمة`,
-            derja: `تحب تلقى كرهبة توا؟
+          derja: `تحب تلقى كرهبة توا؟
 1. إيه
 2. لا، نرجع للقائمة`,
-          };
-          responseMessage = retryMessage[language];
-        }
+        };
+        responseMessage = retryMessageProcedure[language];
         break;
       }
 
@@ -722,6 +728,28 @@ Réponds en ${language === 'french' ? 'français' : language === 'arabic' ? 'ara
       }
 
       case 'showing_comparison': {
+        // First check yes/no response to the transition question
+        // This must come BEFORE parseGoal to avoid "1" being interpreted as find_car goal
+        const readyFromComparison = parseYesNo(message);
+        if (readyFromComparison === true) {
+          newState = 'asking_car_origin';
+          await updateConversation(conversation.id, {
+            state: newState,
+            goal: 'find_car',
+            comparison_query: null,
+          }, supabase);
+          responseMessage = getTemplate('asking_car_origin', language);
+          break;
+        } else if (readyFromComparison === false) {
+          newState = 'goal_selection';
+          await updateConversation(conversation.id, {
+            state: newState,
+            comparison_query: null,
+          }, supabase);
+          responseMessage = getTemplate('goal_selection', language);
+          break;
+        }
+
         // Check if user wants to start a new goal
         const newGoalFromComparison = parseGoal(message);
         if (newGoalFromComparison || isGreeting(message) || isReset(message)) {
@@ -750,36 +778,19 @@ Réponds en ${language === 'french' ? 'français' : language === 'arabic' ? 'ara
           });
         }
 
-        const readyFromComparison = parseYesNo(message);
-        if (readyFromComparison === true) {
-          newState = 'asking_car_origin';
-          await updateConversation(conversation.id, {
-            state: newState,
-            goal: 'find_car',
-            comparison_query: null,
-          }, supabase);
-          responseMessage = getTemplate('asking_car_origin', language);
-        } else if (readyFromComparison === false) {
-          newState = 'goal_selection';
-          await updateConversation(conversation.id, {
-            state: newState,
-            comparison_query: null,
-          }, supabase);
-          responseMessage = getTemplate('goal_selection', language);
-        } else {
-          const retryMessage: Record<Language, string> = {
-            french: `Voulez-vous chercher une de ces voitures?
+        // Re-show the transition question for unrecognized input
+        const retryMessageComparison: Record<Language, string> = {
+          french: `Voulez-vous chercher une de ces voitures?
 1. Oui
 2. Non, retour au menu`,
-            arabic: `تحب تلقى وحدة من هالكراهب؟
+          arabic: `تحب تلقى وحدة من هالكراهب؟
 1. نعم
 2. لا، رجوع للقائمة`,
-            derja: `تحب تلقى وحدة من هالكراهب؟
+          derja: `تحب تلقى وحدة من هالكراهب؟
 1. إيه
 2. لا، نرجع للقائمة`,
-          };
-          responseMessage = retryMessage[language];
-        }
+        };
+        responseMessage = retryMessageComparison[language];
         break;
       }
 
@@ -800,6 +811,30 @@ Réponds en ${language === 'french' ? 'français' : language === 'arabic' ? 'ara
       }
 
       case 'showing_ev_info': {
+        // First check yes/no response to the transition question
+        // This must come BEFORE parseGoal to avoid "1" being interpreted as find_car goal
+        const readyFromEV = parseYesNo(message);
+        if (readyFromEV === true) {
+          // User wants to find an EV - set fuel preference to electric
+          newState = 'asking_car_origin';
+          await updateConversation(conversation.id, {
+            state: newState,
+            goal: 'find_car',
+            fuel_preference: 'electric',
+            selected_ev_topic: null,
+          }, supabase);
+          responseMessage = getTemplate('asking_car_origin', language);
+          break;
+        } else if (readyFromEV === false) {
+          newState = 'goal_selection';
+          await updateConversation(conversation.id, {
+            state: newState,
+            selected_ev_topic: null,
+          }, supabase);
+          responseMessage = getTemplate('goal_selection', language);
+          break;
+        }
+
         // Check if user wants to start a new goal
         const newGoalFromEV = parseGoal(message);
         if (newGoalFromEV || isGreeting(message) || isReset(message)) {
@@ -828,38 +863,19 @@ Réponds en ${language === 'french' ? 'français' : language === 'arabic' ? 'ara
           });
         }
 
-        const readyFromEV = parseYesNo(message);
-        if (readyFromEV === true) {
-          // User wants to find an EV - set fuel preference to electric
-          newState = 'asking_car_origin';
-          await updateConversation(conversation.id, {
-            state: newState,
-            goal: 'find_car',
-            fuel_preference: 'electric',
-            selected_ev_topic: null,
-          }, supabase);
-          responseMessage = getTemplate('asking_car_origin', language);
-        } else if (readyFromEV === false) {
-          newState = 'goal_selection';
-          await updateConversation(conversation.id, {
-            state: newState,
-            selected_ev_topic: null,
-          }, supabase);
-          responseMessage = getTemplate('goal_selection', language);
-        } else {
-          const retryMessage: Record<Language, string> = {
-            french: `Voulez-vous chercher une voiture électrique?
+        // Re-show the transition question for unrecognized input
+        const retryMessageEV: Record<Language, string> = {
+          french: `Voulez-vous chercher une voiture électrique?
 1. Oui
 2. Non, retour au menu`,
-            arabic: `تحب تلقى كرهبة كهربائية؟
+          arabic: `تحب تلقى كرهبة كهربائية؟
 1. نعم
 2. لا، رجوع للقائمة`,
-            derja: `تحب تلقى كرهبة كهربائية؟
+          derja: `تحب تلقى كرهبة كهربائية؟
 1. إيه
 2. لا، نرجع للقائمة`,
-          };
-          responseMessage = retryMessage[language];
-        }
+        };
+        responseMessage = retryMessageEV[language];
         break;
       }
 
@@ -1028,6 +1044,24 @@ Voulez-vous chercher une autre voiture?
       }
 
       case 'showing_popular_models': {
+        // First check yes/no response to the transition question
+        // This must come BEFORE parseGoal to avoid "1" being interpreted as find_car goal
+        const readyFromPopular = parseYesNo(message);
+        if (readyFromPopular === true) {
+          newState = 'asking_car_origin';
+          await updateConversation(conversation.id, {
+            state: newState,
+            goal: 'find_car',
+          }, supabase);
+          responseMessage = getTemplate('asking_car_origin', language);
+          break;
+        } else if (readyFromPopular === false) {
+          newState = 'goal_selection';
+          await updateConversation(conversation.id, { state: newState }, supabase);
+          responseMessage = getTemplate('goal_selection', language);
+          break;
+        }
+
         // Check if user wants to start a new goal
         const newGoalFromPopular = parseGoal(message);
         if (newGoalFromPopular || isGreeting(message) || isReset(message)) {
@@ -1055,32 +1089,19 @@ Voulez-vous chercher une autre voiture?
           });
         }
 
-        const readyFromPopular = parseYesNo(message);
-        if (readyFromPopular === true) {
-          newState = 'asking_car_origin';
-          await updateConversation(conversation.id, {
-            state: newState,
-            goal: 'find_car',
-          }, supabase);
-          responseMessage = getTemplate('asking_car_origin', language);
-        } else if (readyFromPopular === false) {
-          newState = 'goal_selection';
-          await updateConversation(conversation.id, { state: newState }, supabase);
-          responseMessage = getTemplate('goal_selection', language);
-        } else {
-          const retryMessage: Record<Language, string> = {
-            french: `Voulez-vous chercher une voiture?
+        // Re-show the transition question for unrecognized input
+        const retryMessagePopular: Record<Language, string> = {
+          french: `Voulez-vous chercher une voiture?
 1. Oui
 2. Non, retour au menu`,
-            arabic: `تحب تلقى كرهبة؟
+          arabic: `تحب تلقى كرهبة؟
 1. نعم
 2. لا، رجوع للقائمة`,
-            derja: `تحب تلقى كرهبة؟
+          derja: `تحب تلقى كرهبة؟
 1. إيه
 2. لا، نرجع للقائمة`,
-          };
-          responseMessage = retryMessage[language];
-        }
+        };
+        responseMessage = retryMessagePopular[language];
         break;
       }
 
