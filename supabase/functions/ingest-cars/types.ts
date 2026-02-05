@@ -1,5 +1,6 @@
 // Raw CSV row from AutoScout24 files
 export interface AutoScout24Row {
+  [key: string]: string;
   listing_url: string;
   make: string;
   model: string;
@@ -23,6 +24,7 @@ export interface AutoScout24Row {
 
 // Raw CSV row from automobile.tn new cars
 export interface AutomobileTnNewRow {
+  [key: string]: string;
   brand: string;
   model: string;
   trim: string;
@@ -40,6 +42,7 @@ export interface AutomobileTnNewRow {
 
 // Raw CSV row from automobile.tn used cars
 export interface AutomobileTnUsedRow {
+  [key: string]: string;
   brand: string;
   model: string;
   full_name: string;

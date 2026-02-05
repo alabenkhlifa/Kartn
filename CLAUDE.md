@@ -177,6 +177,12 @@ npm run format
 
 # Start chat edge function locally
 npx supabase functions serve chat --env-file supabase/.env.local
+
+# Type-check Supabase functions (use npx deno, not deno directly)
+npx deno check supabase/functions/chat/index.ts
+
+# Build web app
+cd web && npm run build
 ```
 
 ## Chat Function Testing

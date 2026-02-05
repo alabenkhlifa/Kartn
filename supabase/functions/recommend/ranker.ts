@@ -17,6 +17,7 @@ export function buildRecommendations(
         brand: car.brand,
         model: car.model,
         variant: car.variant,
+        full_name: car.full_name ?? null,
         year: car.year,
         price_eur: car.price_eur,
         price_tnd: car.price_tnd,

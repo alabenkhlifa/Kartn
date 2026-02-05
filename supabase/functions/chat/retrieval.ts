@@ -156,7 +156,11 @@ export async function searchCars(
     return [];
   }
 
-  return data || [];
+  // Add computed condition field based on mileage
+  return (data || []).map((car) => ({
+    ...car,
+    condition: car.mileage_km && car.mileage_km > 0 ? 'used' : 'new',
+  }));
 }
 
 /**
