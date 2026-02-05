@@ -14,12 +14,33 @@ const DEFAULT_CLASSIFICATION: ClassificationResult = {
 };
 
 /**
+ * Detect language from script (Arabic characters)
+ * This is a fast, reliable fallback for Arabic/Derja detection
+ */
+function detectLanguageFromScript(message: string): Language | null {
+  // Check for Arabic script (Unicode range 0600-06FF includes Arabic, Persian, Urdu)
+  if (/[\u0600-\u06FF]/.test(message)) {
+    // Derja-specific patterns (Tunisian dialect)
+    // Common Derja words and phrases that distinguish it from MSA
+    const derjaPatterns = /أحكيلي|برّا|تشري|كرهبة|ما\s*يهمش|شنوة|كيفاش|وين|شكون|باهي|برشا|يزي|توا|موش|عندي|نحب|فيسع|صحيت|لازم/;
+    if (derjaPatterns.test(message)) {
+      return 'derja';
+    }
+    return 'arabic';
+  }
+  return null;
+}
+
+/**
  * Classify user query using Llama 3.1 8B (fast)
  */
 export async function classifyQuery(
   message: string,
   groqApiKey: string
 ): Promise<ClassificationResult> {
+  // First, check for Arabic script - this is more reliable than API for language detection
+  const scriptLanguage = detectLanguageFromScript(message);
+
   const request: GroqChatRequest = {
     model: MODELS.classifier,
     messages: [
@@ -44,6 +65,10 @@ export async function classifyQuery(
     if (!response.ok) {
       const error = await response.text();
       console.error('Groq classification error:', error);
+      // Use script-detected language if available
+      if (scriptLanguage) {
+        return { ...DEFAULT_CLASSIFICATION, language: scriptLanguage, confidence: 0.9 };
+      }
       return DEFAULT_CLASSIFICATION;
     }
 
@@ -51,15 +76,26 @@ export async function classifyQuery(
     const content = data.choices[0]?.message?.content;
 
     if (!content) {
+      // Use script-detected language if available
+      if (scriptLanguage) {
+        return { ...DEFAULT_CLASSIFICATION, language: scriptLanguage, confidence: 0.9 };
+      }
       return DEFAULT_CLASSIFICATION;
     }
 
     const parsed = JSON.parse(content);
 
+    // Determine language: prefer script detection for Arabic, otherwise use API
+    let detectedLanguage = validateLanguage(parsed.language);
+    if (scriptLanguage) {
+      // Script detection is more reliable for Arabic/Derja
+      detectedLanguage = scriptLanguage;
+    }
+
     // Validate and normalize the response
     const result: ClassificationResult = {
       intent: validateIntent(parsed.intent),
-      language: validateLanguage(parsed.language),
+      language: detectedLanguage,
       confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.5,
     };
 
@@ -94,6 +130,10 @@ export async function classifyQuery(
     return result;
   } catch (error) {
     console.error('Classification error:', error);
+    // Use script-detected language if available
+    if (scriptLanguage) {
+      return { ...DEFAULT_CLASSIFICATION, language: scriptLanguage, confidence: 0.9 };
+    }
     return DEFAULT_CLASSIFICATION;
   }
 }

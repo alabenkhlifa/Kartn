@@ -7,7 +7,7 @@
 import { describe, it } from '../../deps.ts';
 import { assertEquals, assert } from '../../deps.ts';
 import { chatApi, runConversationFlow } from '../../test-utils/api-client.ts';
-import { assertChatState } from '../../test-utils/assertions.ts';
+import { assertChatState, assertMessageContains } from '../../test-utils/assertions.ts';
 
 // ============================================================================
 // Helper to get to ev_topic_selection state
@@ -52,7 +52,7 @@ describe('EV Info - Topic 1: Hybrid vs EV', () => {
     );
   });
 
-  it('should recognize "différence" keyword', async () => {
+  it('should recognize "différence" keyword and show EV type info', async () => {
     const conversationId = await getEVTopicState();
 
     const response = await chatApi.send({
@@ -61,9 +61,14 @@ describe('EV Info - Topic 1: Hybrid vs EV', () => {
     });
 
     assertChatState(response, 'showing_ev_info');
+    assert(
+      response.message.toLowerCase().includes('hybride') ||
+      response.message.toLowerCase().includes('électrique'),
+      'Response should show EV type info'
+    );
   });
 
-  it('should recognize "phev" keyword', async () => {
+  it('should recognize "phev" keyword and show EV type info', async () => {
     const conversationId = await getEVTopicState();
 
     const response = await chatApi.send({
@@ -72,6 +77,11 @@ describe('EV Info - Topic 1: Hybrid vs EV', () => {
     });
 
     assertChatState(response, 'showing_ev_info');
+    assert(
+      response.message.toLowerCase().includes('hybride') ||
+      response.message.toLowerCase().includes('électrique'),
+      'Response should show EV type info'
+    );
   });
 });
 
@@ -109,7 +119,7 @@ describe('EV Info - Topic 2: EV Law', () => {
     );
   });
 
-  it('should recognize "loi" keyword', async () => {
+  it('should recognize "loi" keyword and show tax/law info', async () => {
     const conversationId = await getEVTopicState();
 
     const response = await chatApi.send({
@@ -118,9 +128,15 @@ describe('EV Info - Topic 2: EV Law', () => {
     });
 
     assertChatState(response, 'showing_ev_info');
+    assert(
+      response.message.toLowerCase().includes('taxe') ||
+      response.message.toLowerCase().includes('loi') ||
+      response.message.toLowerCase().includes('avantage'),
+      'Response should show tax/law information'
+    );
   });
 
-  it('should recognize "fiscal" keyword', async () => {
+  it('should recognize "fiscal" keyword and show tax/law info', async () => {
     const conversationId = await getEVTopicState();
 
     const response = await chatApi.send({
@@ -129,6 +145,12 @@ describe('EV Info - Topic 2: EV Law', () => {
     });
 
     assertChatState(response, 'showing_ev_info');
+    assert(
+      response.message.toLowerCase().includes('taxe') ||
+      response.message.toLowerCase().includes('loi') ||
+      response.message.toLowerCase().includes('avantage'),
+      'Response should show tax/law information'
+    );
   });
 });
 
@@ -166,7 +188,7 @@ describe('EV Info - Topic 3: Charging Stations', () => {
     );
   });
 
-  it('should recognize "borne" keyword', async () => {
+  it('should recognize "borne" keyword and show charging station info', async () => {
     const conversationId = await getEVTopicState();
 
     const response = await chatApi.send({
@@ -175,9 +197,15 @@ describe('EV Info - Topic 3: Charging Stations', () => {
     });
 
     assertChatState(response, 'showing_ev_info');
+    assert(
+      response.message.toLowerCase().includes('borne') ||
+      response.message.toLowerCase().includes('charge') ||
+      response.message.toLowerCase().includes('recharge'),
+      'Response should show charging station info'
+    );
   });
 
-  it('should recognize "recharge" keyword', async () => {
+  it('should recognize "recharge" keyword and show charging station info', async () => {
     const conversationId = await getEVTopicState();
 
     const response = await chatApi.send({
@@ -186,6 +214,12 @@ describe('EV Info - Topic 3: Charging Stations', () => {
     });
 
     assertChatState(response, 'showing_ev_info');
+    assert(
+      response.message.toLowerCase().includes('borne') ||
+      response.message.toLowerCase().includes('charge') ||
+      response.message.toLowerCase().includes('recharge'),
+      'Response should show charging station info'
+    );
   });
 });
 
@@ -223,7 +257,7 @@ describe('EV Info - Topic 4: Solar Panels', () => {
     );
   });
 
-  it('should recognize "solaire" keyword', async () => {
+  it('should recognize "solaire" keyword and show solar panel info', async () => {
     const conversationId = await getEVTopicState();
 
     const response = await chatApi.send({
@@ -232,9 +266,15 @@ describe('EV Info - Topic 4: Solar Panels', () => {
     });
 
     assertChatState(response, 'showing_ev_info');
+    assert(
+      response.message.toLowerCase().includes('solaire') ||
+      response.message.toLowerCase().includes('panneau') ||
+      response.message.toLowerCase().includes('énergie'),
+      'Response should show solar panel info'
+    );
   });
 
-  it('should recognize "panneau" keyword', async () => {
+  it('should recognize "panneau" keyword and show solar panel info', async () => {
     const conversationId = await getEVTopicState();
 
     const response = await chatApi.send({
@@ -243,6 +283,12 @@ describe('EV Info - Topic 4: Solar Panels', () => {
     });
 
     assertChatState(response, 'showing_ev_info');
+    assert(
+      response.message.toLowerCase().includes('solaire') ||
+      response.message.toLowerCase().includes('panneau') ||
+      response.message.toLowerCase().includes('énergie'),
+      'Response should show solar panel info'
+    );
   });
 });
 

@@ -70,8 +70,11 @@ Deno.serve(async (req) => {
     const classification = await classifyQuery(message, groqApiKey);
     let language: Language = classification.language;
 
+    // Check if message is language-ambiguous (numbers, single chars, etc.)
+    const isAmbiguousInput = /^[\d\s.,!?]+$/.test(message.trim()) || message.trim().length <= 3;
+
     // Priority: 1. Request language (first message with language selection)
-    //           2. High-confidence classifier detection
+    //           2. High-confidence classifier detection (skip for ambiguous inputs)
     //           3. Existing conversation language
     if (requestLanguage && ['french', 'arabic', 'derja'].includes(requestLanguage)) {
       language = requestLanguage as Language;
@@ -79,18 +82,20 @@ Deno.serve(async (req) => {
         await updateConversation(conversation.id, { language }, supabase);
         conversation.language = language;
       }
+    } else if (isAmbiguousInput) {
+      // For ambiguous inputs (numbers, short text), always preserve conversation language
+      language = conversation.language;
     } else if (conversation.language !== language && classification.confidence >= 0.7) {
       // Only update language if classifier has high confidence
-      // Numbers like "1", "2" produce low confidence and should not override stored language
       await updateConversation(conversation.id, { language }, supabase);
       conversation.language = language;
     } else if (classification.confidence < 0.7) {
-      // Preserve existing conversation language for ambiguous inputs
+      // Preserve existing conversation language for low-confidence detections
       language = conversation.language;
     }
 
-    // Step 3: Handle reset or greeting
-    if (isReset(message) || (isGreeting(message) && conversation.state === 'goal_selection')) {
+    // Step 3: Handle reset or greeting (greetings always reset conversation)
+    if (isReset(message) || isGreeting(message)) {
       await updateConversation(conversation.id, {
         state: 'goal_selection',
         goal: null,
@@ -112,6 +117,7 @@ Deno.serve(async (req) => {
         intent: 'general_info',
         language,
         conversation_id: conversation.id,
+        state: 'goal_selection',
       });
     }
 
@@ -241,6 +247,7 @@ Deno.serve(async (req) => {
               language,
               conversation_id: conversation.id,
               cars: topRecommendations,
+              state: 'showing_cars',
             });
           }
 
@@ -337,6 +344,7 @@ Deno.serve(async (req) => {
             language,
             conversation_id: conversation.id,
             cars: topRecommendations,
+            state: 'showing_cars',
           });
         } else {
           responseMessage = getTemplate('asking_budget', language);
@@ -370,6 +378,7 @@ Deno.serve(async (req) => {
               intent: 'general_info',
               language,
               conversation_id: conversation.id,
+              state: nextStateForGoal,
             });
           }
 
@@ -379,6 +388,7 @@ Deno.serve(async (req) => {
             intent: 'general_info',
             language,
             conversation_id: conversation.id,
+            state: 'goal_selection',
           });
         }
 
@@ -389,6 +399,7 @@ Deno.serve(async (req) => {
             intent: 'off_topic',
             language,
             conversation_id: conversation.id,
+            state: 'showing_cars',
           });
         }
 
@@ -413,6 +424,7 @@ Deno.serve(async (req) => {
           intent: classification.intent,
           language,
           conversation_id: conversation.id,
+          state: 'showing_cars',
         };
 
         if (context.knowledge_chunks.length > 0) {
@@ -485,7 +497,8 @@ Deno.serve(async (req) => {
             intent: 'cost_calculation',
             language,
             conversation_id: conversation.id,
-            calculation
+            calculation,
+            state: 'showing_calculation',
           });
         } else {
           responseMessage = getTemplate('asking_calc_fuel', language);
@@ -549,6 +562,7 @@ Deno.serve(async (req) => {
               intent: 'general_info',
               language,
               conversation_id: conversation.id,
+              state: nextStateForGoal,
             });
           }
 
@@ -558,6 +572,7 @@ Deno.serve(async (req) => {
             intent: 'general_info',
             language,
             conversation_id: conversation.id,
+            state: 'goal_selection',
           });
         }
 
@@ -767,6 +782,7 @@ Réponds en ${language === 'french' ? 'français' : language === 'arabic' ? 'ara
               intent: 'general_info',
               language,
               conversation_id: conversation.id,
+              state: nextStateForGoal,
             });
           }
 
@@ -775,6 +791,7 @@ Réponds en ${language === 'french' ? 'français' : language === 'arabic' ? 'ara
             intent: 'general_info',
             language,
             conversation_id: conversation.id,
+            state: 'goal_selection',
           });
         }
 
@@ -969,73 +986,49 @@ Voulez-vous chercher une voiture?
 Prochaines étapes:
 1. Préparez vos documents (carte d'identité, fiche de paie, attestation de non-possession)
 2. Rendez-vous à un concessionnaire agréé
-3. Soumettez votre dossier au programme national
-
-Voulez-vous voir les modèles disponibles?
-1. Oui
-2. Non, retour au menu`,
+3. Soumettez votre dossier au programme national`,
             arabic: `✅ **أنت مؤهل على الأرجح!**
 
 الخطوات القادمة:
 1. جهز وثائقك (بطاقة هوية، كشف راتب، شهادة عدم امتلاك)
 2. روح لوكيل معتمد
-3. قدم ملفك للبرنامج الوطني
-
-تحب تشوف الموديلات المتاحة؟
-1. نعم
-2. لا، رجوع للقائمة`,
+3. قدم ملفك للبرنامج الوطني`,
             derja: `✅ **عندك الحق على الأرجح!**
 
 شنو تعمل:
 1. جهز الورق (كارت، فيش دي باي، شهادة ما عندكش كرهبة)
 2. روح لوكيل رسمي
-3. قدم الملف للبرنامج
-
-تحب تشوف الموديلات الموجودة؟
-1. إيه
-2. لا، نرجع للقائمة`,
+3. قدم الملف للبرنامج`,
           };
-          responseMessage = eligibleMessage[language];
-          newState = 'showing_popular_models';
+          responseMessage = eligibleMessage[language] + '\n\n' + getTemplate('goal_selection', language);
+          newState = 'goal_selection';
           await updateConversation(conversation.id, { state: newState }, supabase);
         } else if (salaryLevel === 'not_eligible') {
           const notEligibleMessage: Record<Language, string> = {
             french: `❌ **Malheureusement, vous n'êtes pas éligible aux voitures populaires.**
 
-Le programme est réservé aux ménages avec un revenu mensuel inférieur à 3x SMIG (~1500 TND).
+Le programme est réservé aux ménages avec un revenu mensuel ≤10x SMIG (~5,283 TND) pour les célibataires ou ≤15x SMIG (~7,889 TND) pour les couples.
 
 Alternatives:
 - Chercher une voiture d'occasion économique
-- Explorer les offres FCR si vous avez un proche TRE
-
-Voulez-vous chercher une autre voiture?
-1. Oui
-2. Non, retour au menu`,
+- Explorer les offres FCR si vous avez un proche TRE`,
             arabic: `❌ **للأسف، أنت غير مؤهل للسيارات الشعبية.**
 
-البرنامج مخصص للعائلات ذات دخل شهري أقل من 3x SMIG (~1500 دينار).
+البرنامج مخصص للأفراد بدخل ≤10x SMIG (~5,283 دينار) أو للأزواج بدخل ≤15x SMIG (~7,889 دينار).
 
 بدائل:
 - ابحث عن سيارة مستعملة اقتصادية
-- استكشف عروض FCR إذا عندك قريب TRE
-
-تحب تلقى كرهبة أخرى؟
-1. نعم
-2. لا، رجوع للقائمة`,
+- استكشف عروض FCR إذا عندك قريب TRE`,
             derja: `❌ **للأسف، ما عندكش الحق في الكراهب الشعبية.**
 
-البرنامج للعايلات اللي دخلها أقل من 1500 دينار في الشهر.
+البرنامج للأعزب بخلاص ≤5,283 دينار أو للمتزوج بخلاص ≤7,889 دينار في الشهر.
 
 بدائل:
 - لوج على كرهبة مستعملة رخيصة
-- شوف FCR إذا عندك حد من عايلتك TRE
-
-تحب تلقى كرهبة أخرى؟
-1. إيه
-2. لا، نرجع للقائمة`,
+- شوف FCR إذا عندك حد من عايلتك TRE`,
           };
-          responseMessage = notEligibleMessage[language];
-          newState = 'showing_popular_models';
+          responseMessage = notEligibleMessage[language] + '\n\n' + getTemplate('goal_selection', language);
+          newState = 'goal_selection';
           await updateConversation(conversation.id, { state: newState }, supabase);
         } else {
           responseMessage = getTemplate('asking_popular_eligibility', language);
@@ -1114,6 +1107,7 @@ Voulez-vous chercher une autre voiture?
       intent: classification.intent,
       language,
       conversation_id: conversation.id,
+      state: newState,
     });
 
   } catch (error) {

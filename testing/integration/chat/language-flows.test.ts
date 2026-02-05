@@ -17,11 +17,20 @@ describe('Language Flow - French', () => {
   it('should detect French from "Bonjour" greeting', async () => {
     const response = await chatApi.send({ message: 'Bonjour' });
     assertChatLanguage(response, 'french');
+    // Verify response is an appropriate French greeting
+    assert(
+      response.message.toLowerCase().includes('bienvenue') ||
+      response.message.toLowerCase().includes('bonjour') ||
+      response.message.toLowerCase().includes('salut'),
+      'Response should be French greeting'
+    );
   });
 
   it('should detect French from "Salut" greeting', async () => {
     const response = await chatApi.send({ message: 'Salut' });
     assertChatLanguage(response, 'french');
+    // Verify response contains French words
+    assertMessageContains(response, 'bienvenue', 'Response should be French greeting');
   });
 
   it('should respond in French for goal selection', async () => {
@@ -41,6 +50,15 @@ describe('Language Flow - French', () => {
 
     for (const response of responses) {
       assertChatLanguage(response, 'french');
+      // Verify each response contains French content
+      assert(
+        response.message.toLowerCase().includes('voiture') ||
+        response.message.toLowerCase().includes('vous') ||
+        response.message.toLowerCase().includes('quel') ||
+        response.message.toLowerCase().includes('merci') ||
+        /[àâäéèêëïîôùûüç]/.test(response.message),
+        'Response should contain French content'
+      );
     }
   });
 });
@@ -53,16 +71,31 @@ describe('Language Flow - Arabic', () => {
   it('should detect Arabic from "مرحبا" greeting', async () => {
     const response = await chatApi.send({ message: 'مرحبا' });
     assertChatLanguage(response, 'arabic');
+    // Verify response contains Arabic characters
+    assert(
+      /[\u0600-\u06FF]/.test(response.message),
+      'Response should contain Arabic characters'
+    );
   });
 
   it('should detect Arabic from "السلام" greeting', async () => {
     const response = await chatApi.send({ message: 'السلام' });
     assertChatLanguage(response, 'arabic');
+    // Verify response contains Arabic characters
+    assert(
+      /[\u0600-\u06FF]/.test(response.message),
+      'Response should contain Arabic characters'
+    );
   });
 
   it('should detect Arabic from "اهلا" greeting', async () => {
     const response = await chatApi.send({ message: 'اهلا' });
     assertChatLanguage(response, 'arabic');
+    // Verify response contains Arabic characters
+    assert(
+      /[\u0600-\u06FF]/.test(response.message),
+      'Response should contain Arabic characters'
+    );
   });
 
   it('should respond in Arabic for goal selection', async () => {
@@ -79,6 +112,11 @@ describe('Language Flow - Arabic', () => {
 
     for (const response of responses) {
       assertChatLanguage(response, 'arabic');
+      // Verify each response contains Arabic characters
+      assert(
+        /[\u0600-\u06FF]/.test(response.message),
+        'Response should contain Arabic characters'
+      );
     }
   });
 });
@@ -126,6 +164,13 @@ describe('Language Override', () => {
       language: 'french',
     });
     assertChatLanguage(response, 'french');
+    // Verify content is in French despite English input
+    assert(
+      response.message.toLowerCase().includes('bienvenue') ||
+      response.message.toLowerCase().includes('voiture') ||
+      response.message.toLowerCase().includes('vous'),
+      'Response should contain French content'
+    );
   });
 
   it('should override detected language with parameter', async () => {
@@ -135,6 +180,11 @@ describe('Language Override', () => {
       language: 'arabic',
     });
     assertChatLanguage(response, 'arabic');
+    // Verify content is in Arabic despite English input
+    assert(
+      /[\u0600-\u06FF]/.test(response.message),
+      'Response should contain Arabic characters'
+    );
   });
 });
 
@@ -147,6 +197,13 @@ describe('Mixed Language Handling', () => {
     // Start in French
     const greeting = await chatApi.send({ message: 'Bonjour' });
     assertChatLanguage(greeting, 'french');
+    // Verify French content
+    assert(
+      greeting.message.toLowerCase().includes('bienvenue') ||
+      greeting.message.toLowerCase().includes('voiture') ||
+      /[àâäéèêëïîôùûüç]/.test(greeting.message),
+      'Initial response should contain French content'
+    );
 
     // Continue with numeric input (language neutral)
     const response = await chatApi.send({
@@ -156,12 +213,27 @@ describe('Mixed Language Handling', () => {
 
     // Should maintain French
     assertChatLanguage(response, 'french');
+    // Verify continued French content
+    assert(
+      response.message.toLowerCase().includes('voiture') ||
+      response.message.toLowerCase().includes('vous') ||
+      response.message.toLowerCase().includes('quel') ||
+      /[àâäéèêëïîôùûüç]/.test(response.message),
+      'Continued response should contain French content'
+    );
   });
 
   it('should handle conversation restart in different language', async () => {
     // Start in French
     const french = await chatApi.send({ message: 'Bonjour' });
     assertChatLanguage(french, 'french');
+    // Verify French content
+    assert(
+      french.message.toLowerCase().includes('bienvenue') ||
+      french.message.toLowerCase().includes('voiture') ||
+      /[àâäéèêëïîôùûüç]/.test(french.message),
+      'Initial French response should contain French content'
+    );
 
     // Continue the conversation
     const step2 = await chatApi.send({
@@ -178,5 +250,10 @@ describe('Mixed Language Handling', () => {
     // Should switch to Arabic and reset to goal selection
     assertChatLanguage(arabic, 'arabic');
     assertEquals(arabic.state, 'goal_selection');
+    // Verify Arabic content
+    assert(
+      /[\u0600-\u06FF]/.test(arabic.message),
+      'Arabic response should contain Arabic characters'
+    );
   });
 });

@@ -7,7 +7,7 @@
 import { describe, it } from '../../deps.ts';
 import { assertEquals, assert } from '../../deps.ts';
 import { chatApi, runConversationFlow } from '../../test-utils/api-client.ts';
-import { assertChatState, assertHasCars } from '../../test-utils/assertions.ts';
+import { assertChatState, assertHasCars, assertMessageContains } from '../../test-utils/assertions.ts';
 
 // ============================================================================
 // Complete Tunisia Flow with Specific Filters
@@ -32,6 +32,13 @@ describe('Tunisia Car Search - Complete Flow', () => {
       conversation_id: greeting.conversation_id,
     });
     assertChatState(tunisia, 'asking_condition');
+    // Verify condition prompt contains expected keywords
+    assert(
+      tunisia.message.toLowerCase().includes('neuf') ||
+      tunisia.message.toLowerCase().includes('occasion') ||
+      tunisia.message.toLowerCase().includes('état'),
+      'Response should ask about car condition (neuf/occasion/état)'
+    );
 
     // Step 4: Select used (option 2)
     const condition = await chatApi.send({
@@ -39,6 +46,13 @@ describe('Tunisia Car Search - Complete Flow', () => {
       conversation_id: greeting.conversation_id,
     });
     assertChatState(condition, 'asking_budget');
+    // Verify budget prompt contains expected keywords
+    assert(
+      condition.message.toLowerCase().includes('budget') ||
+      condition.message.toLowerCase().includes('prix') ||
+      condition.message.toLowerCase().includes('tnd'),
+      'Response should ask about budget (budget/prix/TND)'
+    );
 
     // Step 5: Select budget (option 2 = 70k)
     const budget = await chatApi.send({
@@ -46,6 +60,13 @@ describe('Tunisia Car Search - Complete Flow', () => {
       conversation_id: greeting.conversation_id,
     });
     assertChatState(budget, 'asking_fuel_type');
+    // Verify fuel prompt contains expected keywords
+    assert(
+      budget.message.toLowerCase().includes('carburant') ||
+      budget.message.toLowerCase().includes('essence') ||
+      budget.message.toLowerCase().includes('diesel'),
+      'Response should ask about fuel type (carburant/essence/diesel)'
+    );
 
     // Step 6: Select essence (option 1)
     const fuel = await chatApi.send({
@@ -53,6 +74,14 @@ describe('Tunisia Car Search - Complete Flow', () => {
       conversation_id: greeting.conversation_id,
     });
     assertChatState(fuel, 'asking_car_type');
+    // Verify car type prompt contains expected keywords
+    assert(
+      fuel.message.toLowerCase().includes('type') ||
+      fuel.message.toLowerCase().includes('suv') ||
+      fuel.message.toLowerCase().includes('berline') ||
+      fuel.message.toLowerCase().includes('citadine'),
+      'Response should ask about car type (type/SUV/berline/citadine)'
+    );
 
     // Step 7: Select SUV (option 1)
     const carType = await chatApi.send({
@@ -61,8 +90,11 @@ describe('Tunisia Car Search - Complete Flow', () => {
     });
     assertChatState(carType, 'showing_cars');
 
-    // Should have cars in the response
-    assert(carType.cars !== undefined || carType.message.length > 0);
+    // Should have cars in the response or an appropriate message
+    assert(
+      carType.cars !== undefined || carType.message.length > 0,
+      'Response should show cars or provide an appropriate message'
+    );
   });
 });
 

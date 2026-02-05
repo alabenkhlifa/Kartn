@@ -7,7 +7,7 @@
 import { describe, it } from '../../deps.ts';
 import { assertEquals, assert } from '../../deps.ts';
 import { chatApi } from '../../test-utils/api-client.ts';
-import { assertChatState, assertHasOptions } from '../../test-utils/assertions.ts';
+import { assertChatState, assertHasOptions, assertMessageContains } from '../../test-utils/assertions.ts';
 
 // ============================================================================
 // Helper to get to goal selection state
@@ -33,6 +33,12 @@ describe('Goal Selection - Option 1: Find Car', () => {
     });
 
     assertChatState(response, 'asking_car_origin');
+    assert(
+      response.message.toLowerCase().includes('origine') ||
+      response.message.toLowerCase().includes('origin') ||
+      response.message.toLowerCase().includes('tunisie'),
+      'Response should ask about car origin'
+    );
   });
 
   it('should work with "acheter" keyword', async () => {
@@ -44,6 +50,12 @@ describe('Goal Selection - Option 1: Find Car', () => {
     });
 
     assertChatState(response, 'asking_car_origin');
+    assert(
+      response.message.toLowerCase().includes('origine') ||
+      response.message.toLowerCase().includes('origin') ||
+      response.message.toLowerCase().includes('tunisie'),
+      'Response should ask about car origin'
+    );
   });
 
   it('should work with "cherche" keyword', async () => {
@@ -55,6 +67,12 @@ describe('Goal Selection - Option 1: Find Car', () => {
     });
 
     assertChatState(response, 'asking_car_origin');
+    assert(
+      response.message.toLowerCase().includes('origine') ||
+      response.message.toLowerCase().includes('origin') ||
+      response.message.toLowerCase().includes('tunisie'),
+      'Response should ask about car origin'
+    );
   });
 
   it('should work with Arabic keyword "تشري"', async () => {
@@ -66,6 +84,13 @@ describe('Goal Selection - Option 1: Find Car', () => {
     });
 
     assertChatState(response, 'asking_car_origin');
+    // Arabic response should contain origin-related content or numbered options
+    assert(
+      response.message.includes('تونس') ||
+      response.message.includes('خارج') ||
+      (/[\u0600-\u06FF]/.test(response.message) && response.message.includes('1') && response.message.includes('2')),
+      'Response should ask about car origin (in Arabic)'
+    );
   });
 });
 
@@ -83,6 +108,12 @@ describe('Goal Selection - Option 2: FCR Procedures', () => {
     });
 
     assertChatState(response, 'procedure_info');
+    assert(
+      response.message.toLowerCase().includes('fcr') ||
+      response.message.toLowerCase().includes('tre') ||
+      response.message.toLowerCase().includes('famille'),
+      'Response should mention FCR, TRE, or Famille'
+    );
   });
 
   it('should work with "procédure" keyword', async () => {
@@ -94,6 +125,12 @@ describe('Goal Selection - Option 2: FCR Procedures', () => {
     });
 
     assertChatState(response, 'procedure_info');
+    assert(
+      response.message.toLowerCase().includes('fcr') ||
+      response.message.toLowerCase().includes('tre') ||
+      response.message.toLowerCase().includes('famille'),
+      'Response should mention FCR, TRE, or Famille'
+    );
   });
 
   it('should work with "fcr" keyword', async () => {
@@ -105,6 +142,12 @@ describe('Goal Selection - Option 2: FCR Procedures', () => {
     });
 
     assertChatState(response, 'procedure_info');
+    assert(
+      response.message.toLowerCase().includes('fcr') ||
+      response.message.toLowerCase().includes('tre') ||
+      response.message.toLowerCase().includes('famille'),
+      'Response should mention FCR, TRE, or Famille'
+    );
   });
 
   it('should present FCR TRE and FCR Famille options', async () => {
@@ -139,6 +182,12 @@ describe('Goal Selection - Option 3: Compare Cars', () => {
     });
 
     assertChatState(response, 'car_comparison_input');
+    assert(
+      response.message.toLowerCase().includes('comparer') ||
+      response.message.toLowerCase().includes('modèle') ||
+      response.message.toLowerCase().includes('voiture'),
+      'Response should ask about car comparison'
+    );
   });
 
   it('should work with "comparer" keyword', async () => {
@@ -150,6 +199,12 @@ describe('Goal Selection - Option 3: Compare Cars', () => {
     });
 
     assertChatState(response, 'car_comparison_input');
+    assert(
+      response.message.toLowerCase().includes('comparer') ||
+      response.message.toLowerCase().includes('modèle') ||
+      response.message.toLowerCase().includes('voiture'),
+      'Response should ask about car comparison'
+    );
   });
 
   it('should work with "vs" keyword', async () => {
@@ -161,6 +216,12 @@ describe('Goal Selection - Option 3: Compare Cars', () => {
     });
 
     assertChatState(response, 'car_comparison_input');
+    assert(
+      response.message.toLowerCase().includes('comparer') ||
+      response.message.toLowerCase().includes('modèle') ||
+      response.message.toLowerCase().includes('voiture'),
+      'Response should ask about car comparison'
+    );
   });
 
   it('should ask for comparison query', async () => {
@@ -195,6 +256,11 @@ describe('Goal Selection - Option 4: EV Info', () => {
     });
 
     assertChatState(response, 'ev_topic_selection');
+    assert(
+      response.message.toLowerCase().includes('électrique') ||
+      (response.message.includes('1') && response.message.includes('2')),
+      'Response should mention electric or present numbered options'
+    );
   });
 
   it('should work with "électrique" keyword', async () => {
@@ -206,6 +272,11 @@ describe('Goal Selection - Option 4: EV Info', () => {
     });
 
     assertChatState(response, 'ev_topic_selection');
+    assert(
+      response.message.toLowerCase().includes('électrique') ||
+      (response.message.includes('1') && response.message.includes('2')),
+      'Response should mention electric or present numbered options'
+    );
   });
 
   it('should work with "ev" keyword', async () => {
@@ -217,6 +288,11 @@ describe('Goal Selection - Option 4: EV Info', () => {
     });
 
     assertChatState(response, 'ev_topic_selection');
+    assert(
+      response.message.toLowerCase().includes('électrique') ||
+      (response.message.includes('1') && response.message.includes('2')),
+      'Response should mention electric or present numbered options'
+    );
   });
 
   it('should present EV topic options', async () => {
@@ -249,6 +325,12 @@ describe('Goal Selection - Option 5: Browse Offers', () => {
     });
 
     assertChatState(response, 'asking_car_origin');
+    assert(
+      response.message.toLowerCase().includes('origine') ||
+      response.message.toLowerCase().includes('origin') ||
+      response.message.toLowerCase().includes('tunisie'),
+      'Response should ask about car origin'
+    );
   });
 
   it('should work with "parcourir" keyword', async () => {
@@ -260,6 +342,12 @@ describe('Goal Selection - Option 5: Browse Offers', () => {
     });
 
     assertChatState(response, 'asking_car_origin');
+    assert(
+      response.message.toLowerCase().includes('origine') ||
+      response.message.toLowerCase().includes('origin') ||
+      response.message.toLowerCase().includes('tunisie'),
+      'Response should ask about car origin'
+    );
   });
 
   it('should work with "offres" keyword', async () => {
@@ -271,6 +359,12 @@ describe('Goal Selection - Option 5: Browse Offers', () => {
     });
 
     assertChatState(response, 'asking_car_origin');
+    assert(
+      response.message.toLowerCase().includes('origine') ||
+      response.message.toLowerCase().includes('origin') ||
+      response.message.toLowerCase().includes('tunisie'),
+      'Response should ask about car origin'
+    );
   });
 });
 
@@ -288,6 +382,12 @@ describe('Goal Selection - Option 6: Popular Cars', () => {
     });
 
     assertChatState(response, 'popular_cars_selection');
+    assert(
+      response.message.toLowerCase().includes('éligib') ||
+      response.message.toLowerCase().includes('modèle') ||
+      response.message.toLowerCase().includes('populaire'),
+      'Response should mention eligibility, models, or popular'
+    );
   });
 
   it('should work with "populaire" keyword', async () => {
@@ -299,6 +399,12 @@ describe('Goal Selection - Option 6: Popular Cars', () => {
     });
 
     assertChatState(response, 'popular_cars_selection');
+    assert(
+      response.message.toLowerCase().includes('éligib') ||
+      response.message.toLowerCase().includes('modèle') ||
+      response.message.toLowerCase().includes('populaire'),
+      'Response should mention eligibility, models, or popular'
+    );
   });
 
   it('should work with "subvention" keyword', async () => {
@@ -310,6 +416,12 @@ describe('Goal Selection - Option 6: Popular Cars', () => {
     });
 
     assertChatState(response, 'popular_cars_selection');
+    assert(
+      response.message.toLowerCase().includes('éligib') ||
+      response.message.toLowerCase().includes('modèle') ||
+      response.message.toLowerCase().includes('populaire'),
+      'Response should mention eligibility, models, or popular'
+    );
   });
 
   it('should present eligibility check and models options', async () => {
@@ -342,6 +454,10 @@ describe('Goal Selection - Invalid Input', () => {
     });
 
     assertChatState(response, 'goal_selection');
+    assert(
+      response.message.includes('1') || response.options !== undefined,
+      'Response should re-prompt with options'
+    );
   });
 
   it('should re-present options after invalid input', async () => {
@@ -356,7 +472,7 @@ describe('Goal Selection - Invalid Input', () => {
     assertChatState(response, 'goal_selection');
     assert(
       response.message.includes('1') || response.options !== undefined,
-      'Response should re-present options'
+      'Response should re-prompt with options'
     );
   });
 });

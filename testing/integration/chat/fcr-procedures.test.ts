@@ -61,6 +61,7 @@ describe('FCR Procedures - FCR TRE', () => {
     });
 
     assertChatState(response, 'showing_procedure_detail');
+    assertMessageContains(response, 'TRE', 'Response should show TRE procedure info');
   });
 
   it('should recognize "import" keyword for FCR TRE', async () => {
@@ -72,6 +73,7 @@ describe('FCR Procedures - FCR TRE', () => {
     });
 
     assertChatState(response, 'showing_procedure_detail');
+    assertMessageContains(response, 'TRE', 'Response should show TRE procedure info');
   });
 });
 
@@ -117,6 +119,7 @@ describe('FCR Procedures - FCR Famille', () => {
     });
 
     assertChatState(response, 'showing_procedure_detail');
+    assertMessageContains(response, 'Famille', 'Response should show Famille procedure info');
   });
 
   it('should recognize "article 55" keyword', async () => {
@@ -128,6 +131,7 @@ describe('FCR Procedures - FCR Famille', () => {
     });
 
     assertChatState(response, 'showing_procedure_detail');
+    assertMessageContains(response, 'Famille', 'Response should show Famille procedure info');
   });
 });
 
@@ -140,10 +144,19 @@ describe('FCR Procedures - Post-Procedure Transitions', () => {
     const conversationId = await getProcedureInfoState();
 
     // Select a procedure
-    await chatApi.send({
+    const procedureResponse = await chatApi.send({
       message: '1',
       conversation_id: conversationId,
     });
+
+    // Verify yes/no prompt appears after procedure selection
+    assertChatState(procedureResponse, 'showing_procedure_detail');
+    assert(
+      procedureResponse.message.toLowerCase().includes('oui') ||
+      procedureResponse.message.toLowerCase().includes('non') ||
+      procedureResponse.message.toLowerCase().includes('autre'),
+      'Response should show yes/no prompt after procedure info'
+    );
 
     // Say yes to start car search
     const response = await chatApi.send({
@@ -159,10 +172,19 @@ describe('FCR Procedures - Post-Procedure Transitions', () => {
     const conversationId = await getProcedureInfoState();
 
     // Select a procedure
-    await chatApi.send({
+    const procedureResponse = await chatApi.send({
       message: '1',
       conversation_id: conversationId,
     });
+
+    // Verify yes/no prompt appears after procedure selection
+    assertChatState(procedureResponse, 'showing_procedure_detail');
+    assert(
+      procedureResponse.message.toLowerCase().includes('oui') ||
+      procedureResponse.message.toLowerCase().includes('non') ||
+      procedureResponse.message.toLowerCase().includes('autre'),
+      'Response should show yes/no prompt after procedure info'
+    );
 
     // Say no to return to menu
     const response = await chatApi.send({
@@ -176,7 +198,15 @@ describe('FCR Procedures - Post-Procedure Transitions', () => {
 
   it('should recognize "oui" for yes transition', async () => {
     const conversationId = await getProcedureInfoState();
-    await chatApi.send({ message: '1', conversation_id: conversationId });
+    const procedureResponse = await chatApi.send({ message: '1', conversation_id: conversationId });
+
+    // Verify yes/no prompt appears after procedure selection
+    assert(
+      procedureResponse.message.toLowerCase().includes('oui') ||
+      procedureResponse.message.toLowerCase().includes('non') ||
+      procedureResponse.message.toLowerCase().includes('autre'),
+      'Response should show yes/no prompt after procedure info'
+    );
 
     const response = await chatApi.send({
       message: 'oui',
@@ -188,7 +218,15 @@ describe('FCR Procedures - Post-Procedure Transitions', () => {
 
   it('should recognize "non" for no transition', async () => {
     const conversationId = await getProcedureInfoState();
-    await chatApi.send({ message: '1', conversation_id: conversationId });
+    const procedureResponse = await chatApi.send({ message: '1', conversation_id: conversationId });
+
+    // Verify yes/no prompt appears after procedure selection
+    assert(
+      procedureResponse.message.toLowerCase().includes('oui') ||
+      procedureResponse.message.toLowerCase().includes('non') ||
+      procedureResponse.message.toLowerCase().includes('autre'),
+      'Response should show yes/no prompt after procedure info'
+    );
 
     const response = await chatApi.send({
       message: 'non',

@@ -8,7 +8,7 @@
 import { describe, it } from '../../deps.ts';
 import { assertEquals, assert } from '../../deps.ts';
 import { chatApi, runConversationFlow } from '../../test-utils/api-client.ts';
-import { assertChatState } from '../../test-utils/assertions.ts';
+import { assertChatState, assertMessageContains } from '../../test-utils/assertions.ts';
 
 // ============================================================================
 // TRE Flow (Tunisian Resident Abroad)
@@ -33,6 +33,13 @@ describe('Import Car Search - TRE Flow', () => {
       conversation_id: greeting.conversation_id,
     });
     assertChatState(abroad, 'asking_residency');
+    // Verify residency question appears (French or via numbered options)
+    assert(
+      abroad.message.toLowerCase().includes('résid') ||
+      abroad.message.toLowerCase().includes('habite') ||
+      (abroad.message.includes('1') && abroad.message.includes('2')),
+      'Response should ask about residency'
+    );
 
     // Step 4: Select TRE (abroad residency)
     const residency = await chatApi.send({
@@ -40,6 +47,14 @@ describe('Import Car Search - TRE Flow', () => {
       conversation_id: greeting.conversation_id,
     });
     assertChatState(residency, 'asking_fuel_type');
+    // Verify fuel type question appears
+    assert(
+      residency.message.toLowerCase().includes('carburant') ||
+      residency.message.toLowerCase().includes('essence') ||
+      residency.message.toLowerCase().includes('diesel') ||
+      (residency.message.includes('1') && residency.message.includes('2')),
+      'Response should ask about fuel type'
+    );
 
     // Step 5: Select fuel type
     const fuel = await chatApi.send({
@@ -61,6 +76,14 @@ describe('Import Car Search - TRE Flow', () => {
       conversation_id: greeting.conversation_id,
     });
     assertChatState(condition, 'asking_budget');
+    // Verify budget question appears
+    assert(
+      condition.message.toLowerCase().includes('budget') ||
+      condition.message.toLowerCase().includes('prix') ||
+      condition.message.toLowerCase().includes('tnd') ||
+      condition.message.toLowerCase().includes('dinar'),
+      'Response should ask about budget'
+    );
 
     // Step 8: Set budget
     const budget = await chatApi.send({
@@ -92,6 +115,13 @@ describe('Import Car Search - TRE Flow', () => {
       conversation_id: responses[0].conversation_id,
     });
     assertChatState(origin, 'asking_residency');
+    // Verify residency question appears
+    assert(
+      origin.message.toLowerCase().includes('résid') ||
+      origin.message.toLowerCase().includes('habite') ||
+      (origin.message.includes('1') && origin.message.includes('2')),
+      'Response should ask about residency'
+    );
   });
 
   it('should recognize "import" keyword for abroad origin', async () => {
@@ -104,6 +134,13 @@ describe('Import Car Search - TRE Flow', () => {
       conversation_id: responses[0].conversation_id,
     });
     assertChatState(origin, 'asking_residency');
+    // Verify residency question appears
+    assert(
+      origin.message.toLowerCase().includes('résid') ||
+      origin.message.toLowerCase().includes('habite') ||
+      (origin.message.includes('1') && origin.message.includes('2')),
+      'Response should ask about residency'
+    );
   });
 });
 
@@ -130,6 +167,13 @@ describe('Import Car Search - FCR Famille Flow', () => {
       conversation_id: greeting.conversation_id,
     });
     assertChatState(abroad, 'asking_residency');
+    // Verify residency question appears (French or via numbered options)
+    assert(
+      abroad.message.toLowerCase().includes('résid') ||
+      abroad.message.toLowerCase().includes('habite') ||
+      (abroad.message.includes('1') && abroad.message.includes('2')),
+      'Response should ask about residency'
+    );
 
     // Step 4: Select local residency
     const residency = await chatApi.send({
@@ -137,6 +181,13 @@ describe('Import Car Search - FCR Famille Flow', () => {
       conversation_id: greeting.conversation_id,
     });
     assertChatState(residency, 'asking_fcr_famille');
+    // Verify FCR question appears
+    assert(
+      residency.message.toUpperCase().includes('FCR') ||
+      residency.message.toLowerCase().includes('famille') ||
+      (residency.message.includes('1') && residency.message.includes('2')),
+      'Response should ask about FCR Famille'
+    );
 
     // Step 5: Answer FCR Famille question - Yes
     const fcrFamille = await chatApi.send({
@@ -144,6 +195,14 @@ describe('Import Car Search - FCR Famille Flow', () => {
       conversation_id: greeting.conversation_id,
     });
     assertChatState(fcrFamille, 'asking_fuel_type');
+    // Verify fuel type question appears
+    assert(
+      fcrFamille.message.toLowerCase().includes('carburant') ||
+      fcrFamille.message.toLowerCase().includes('essence') ||
+      fcrFamille.message.toLowerCase().includes('diesel') ||
+      (fcrFamille.message.includes('1') && fcrFamille.message.includes('2')),
+      'Response should ask about fuel type'
+    );
 
     // Step 6: Continue with fuel type
     const fuel = await chatApi.send({
@@ -165,6 +224,14 @@ describe('Import Car Search - FCR Famille Flow', () => {
       conversation_id: greeting.conversation_id,
     });
     assertChatState(condition, 'asking_budget');
+    // Verify budget question appears
+    assert(
+      condition.message.toLowerCase().includes('budget') ||
+      condition.message.toLowerCase().includes('prix') ||
+      condition.message.toLowerCase().includes('tnd') ||
+      condition.message.toLowerCase().includes('dinar'),
+      'Response should ask about budget'
+    );
 
     // Step 9: Budget
     const budget = await chatApi.send({
@@ -252,6 +319,13 @@ describe('Import Car Search - Arabic Keywords', () => {
       conversation_id: greeting.conversation_id,
     });
     assertChatState(origin, 'asking_residency');
+    // Arabic response should contain residency-related content or numbered options
+    assert(
+      origin.message.includes('تقيم') ||
+      origin.message.includes('سكن') ||
+      /[\u0600-\u06FF]/.test(origin.message) && (origin.message.includes('1') && origin.message.includes('2')),
+      'Response should ask about residency in Arabic'
+    );
   });
 
   it('should recognize Arabic "نعم" for FCR Famille yes', async () => {
@@ -358,9 +432,22 @@ describe('Import Car Search - State Transitions', () => {
 
     const s2 = await chatApi.send({ message: '2', conversation_id: id });
     states.push(s2.state!);
+    assert(
+      s2.message.toLowerCase().includes('résid') ||
+      s2.message.toLowerCase().includes('habite') ||
+      (s2.message.includes('1') && s2.message.includes('2')),
+      'Response should ask about residency'
+    );
 
     const s3 = await chatApi.send({ message: '2', conversation_id: id });
     states.push(s3.state!);
+    assert(
+      s3.message.toLowerCase().includes('carburant') ||
+      s3.message.toLowerCase().includes('essence') ||
+      s3.message.toLowerCase().includes('diesel') ||
+      (s3.message.includes('1') && s3.message.includes('2')),
+      'Response should ask about fuel type'
+    );
 
     const s4 = await chatApi.send({ message: '1', conversation_id: id });
     states.push(s4.state!);
@@ -370,6 +457,13 @@ describe('Import Car Search - State Transitions', () => {
 
     const s6 = await chatApi.send({ message: '2', conversation_id: id });
     states.push(s6.state!);
+    assert(
+      s6.message.toLowerCase().includes('budget') ||
+      s6.message.toLowerCase().includes('prix') ||
+      s6.message.toLowerCase().includes('tnd') ||
+      s6.message.toLowerCase().includes('dinar'),
+      'Response should ask about budget'
+    );
 
     const s7 = await chatApi.send({ message: '100000', conversation_id: id });
     states.push(s7.state!);
@@ -397,12 +491,31 @@ describe('Import Car Search - State Transitions', () => {
 
     const s2 = await chatApi.send({ message: '2', conversation_id: id });
     states.push(s2.state!);
+    assert(
+      s2.message.toLowerCase().includes('résid') ||
+      s2.message.toLowerCase().includes('habite') ||
+      (s2.message.includes('1') && s2.message.includes('2')),
+      'Response should ask about residency'
+    );
 
     const s3 = await chatApi.send({ message: '1', conversation_id: id }); // local
     states.push(s3.state!);
+    assert(
+      s3.message.toUpperCase().includes('FCR') ||
+      s3.message.toLowerCase().includes('famille') ||
+      (s3.message.includes('1') && s3.message.includes('2')),
+      'Response should ask about FCR Famille'
+    );
 
     const s4 = await chatApi.send({ message: '1', conversation_id: id }); // FCR oui
     states.push(s4.state!);
+    assert(
+      s4.message.toLowerCase().includes('carburant') ||
+      s4.message.toLowerCase().includes('essence') ||
+      s4.message.toLowerCase().includes('diesel') ||
+      (s4.message.includes('1') && s4.message.includes('2')),
+      'Response should ask about fuel type'
+    );
 
     const s5 = await chatApi.send({ message: '1', conversation_id: id });
     states.push(s5.state!);
@@ -412,6 +525,13 @@ describe('Import Car Search - State Transitions', () => {
 
     const s7 = await chatApi.send({ message: '2', conversation_id: id });
     states.push(s7.state!);
+    assert(
+      s7.message.toLowerCase().includes('budget') ||
+      s7.message.toLowerCase().includes('prix') ||
+      s7.message.toLowerCase().includes('tnd') ||
+      s7.message.toLowerCase().includes('dinar'),
+      'Response should ask about budget'
+    );
 
     const s8 = await chatApi.send({ message: '100000', conversation_id: id });
     states.push(s8.state!);

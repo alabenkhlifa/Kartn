@@ -11,7 +11,7 @@ interface UseChatReturn {
   isLoading: boolean;
   error: string | null;
   conversationId: string | null;
-  sendUserMessage: (content: string, language?: UILanguage) => Promise<void>;
+  sendUserMessage: (content: string, language?: UILanguage, apiContent?: string) => Promise<void>;
   clearConversation: () => void;
 }
 
@@ -35,7 +35,7 @@ export function useChat(): UseChatReturn {
   }, [messages.length, clearConversationId]);
 
   const sendUserMessage = useCallback(
-    async (content: string, language?: UILanguage) => {
+    async (content: string, language?: UILanguage, apiContent?: string) => {
       if (!content.trim() || isLoading) return;
 
       // Cancel any pending request
@@ -63,7 +63,7 @@ export function useChat(): UseChatReturn {
           undefined;
 
         const response = await sendMessage({
-          message: content.trim(),
+          message: (apiContent || content).trim(),
           conversation_id: conversationId || undefined,
           language: effectiveLanguage,
         });

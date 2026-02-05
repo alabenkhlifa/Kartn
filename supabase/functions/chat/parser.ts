@@ -437,14 +437,15 @@ export function parsePopularCarsSelection(input: string): 'eligibility' | 'model
 }
 
 /**
- * Parse salary level for popular car eligibility (1=under 1500, 2=over 1500)
+ * Parse salary level for popular car eligibility
+ * 1=single eligible (≤5,283 TND), 2=couple eligible (≤7,889 TND), 3=not eligible
  */
 export function parseSalaryLevel(input: string): 'eligible' | 'not_eligible' | null {
   const trimmed = input.trim().toLowerCase();
   const firstChar = trimmed.charAt(0);
 
-  if (firstChar === '1') return 'eligible';
-  if (firstChar === '2') return 'not_eligible';
+  if (firstChar === '1' || firstChar === '2') return 'eligible';
+  if (firstChar === '3') return 'not_eligible';
 
   return null;
 }

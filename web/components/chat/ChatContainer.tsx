@@ -14,8 +14,8 @@ export default function ChatContainer() {
 
   const handleSuggestionSelect = useCallback(
     (option: ParsedOption) => {
-      // Send the option text for better chat history readability
-      sendUserMessage(option.text);
+      // Display full text in chat, send number to API
+      sendUserMessage(option.text, undefined, option.number.toString());
     },
     [sendUserMessage]
   );

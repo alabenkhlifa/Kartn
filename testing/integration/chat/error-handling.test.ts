@@ -7,7 +7,7 @@
 import { describe, it } from '../../deps.ts';
 import { assertEquals, assert } from '../../deps.ts';
 import { chatApi } from '../../test-utils/api-client.ts';
-import { assertChatState, assertStatus } from '../../test-utils/assertions.ts';
+import { assertChatState, assertMessageContains, assertStatus } from '../../test-utils/assertions.ts';
 
 // ============================================================================
 // Invalid Input at Each State
@@ -23,6 +23,10 @@ describe('Error Handling - Invalid Options Stay in State', () => {
     });
 
     assertChatState(invalid, 'goal_selection');
+    assert(
+      invalid.message.includes('1') || invalid.message.toLowerCase().includes('choisir'),
+      'Response should re-prompt with options'
+    );
   });
 
   it('should stay in goal_selection for out-of-range number', async () => {
@@ -34,6 +38,10 @@ describe('Error Handling - Invalid Options Stay in State', () => {
     });
 
     assertChatState(invalid, 'goal_selection');
+    assert(
+      invalid.message.includes('1') || invalid.message.toLowerCase().includes('choisir'),
+      'Response should re-prompt with options'
+    );
   });
 
   it('should stay in asking_car_origin for invalid option', async () => {
@@ -46,6 +54,10 @@ describe('Error Handling - Invalid Options Stay in State', () => {
     });
 
     assertChatState(invalid, 'asking_car_origin');
+    assert(
+      invalid.message.includes('1') || invalid.message.toLowerCase().includes('choisir'),
+      'Response should re-prompt with options'
+    );
   });
 
   it('should stay in asking_residency for invalid option', async () => {
@@ -59,6 +71,10 @@ describe('Error Handling - Invalid Options Stay in State', () => {
     });
 
     assertChatState(invalid, 'asking_residency');
+    assert(
+      invalid.message.includes('1') || invalid.message.toLowerCase().includes('choisir'),
+      'Response should re-prompt with options'
+    );
   });
 
   it('should stay in asking_budget for invalid budget', async () => {
@@ -73,6 +89,10 @@ describe('Error Handling - Invalid Options Stay in State', () => {
     });
 
     assertChatState(invalid, 'asking_budget');
+    assert(
+      invalid.message.toLowerCase().includes('budget') || invalid.message.toLowerCase().includes('dt') || invalid.message.toLowerCase().includes('dinar'),
+      'Response should re-prompt for budget'
+    );
   });
 
   it('should stay in asking_fuel_type for invalid option', async () => {
@@ -88,6 +108,10 @@ describe('Error Handling - Invalid Options Stay in State', () => {
     });
 
     assertChatState(invalid, 'asking_fuel_type');
+    assert(
+      invalid.message.includes('1') || invalid.message.toLowerCase().includes('choisir') || invalid.message.toLowerCase().includes('carburant'),
+      'Response should re-prompt with fuel options'
+    );
   });
 
   it('should stay in asking_car_type for invalid option', async () => {
@@ -104,6 +128,10 @@ describe('Error Handling - Invalid Options Stay in State', () => {
     });
 
     assertChatState(invalid, 'asking_car_type');
+    assert(
+      invalid.message.includes('1') || invalid.message.toLowerCase().includes('choisir') || invalid.message.toLowerCase().includes('type'),
+      'Response should re-prompt with car type options'
+    );
   });
 });
 
@@ -115,26 +143,31 @@ describe('Error Handling - HTTP Methods', () => {
   it('should return 405 for GET request', async () => {
     const response = await chatApi.sendRaw(null, { method: 'GET' });
     assertStatus(response, 405);
+    await response.body?.cancel(); // Consume body to avoid leak
   });
 
   it('should return 405 for PUT request', async () => {
     const response = await chatApi.sendRaw({ message: 'test' }, { method: 'PUT' });
     assertStatus(response, 405);
+    await response.body?.cancel(); // Consume body to avoid leak
   });
 
   it('should return 405 for DELETE request', async () => {
     const response = await chatApi.sendRaw(null, { method: 'DELETE' });
     assertStatus(response, 405);
+    await response.body?.cancel(); // Consume body to avoid leak
   });
 
   it('should return 405 for PATCH request', async () => {
     const response = await chatApi.sendRaw({ message: 'test' }, { method: 'PATCH' });
     assertStatus(response, 405);
+    await response.body?.cancel(); // Consume body to avoid leak
   });
 
   it('should accept POST request', async () => {
     const response = await chatApi.sendRaw({ message: 'Bonjour' }, { method: 'POST' });
     assertStatus(response, 200);
+    await response.body?.cancel(); // Consume body to avoid leak
   });
 
   it('should accept OPTIONS request (CORS preflight)', async () => {
@@ -144,6 +177,7 @@ describe('Error Handling - HTTP Methods', () => {
       response.status === 200 || response.status === 204,
       `Expected 200 or 204 for OPTIONS, got ${response.status}`
     );
+    await response.body?.cancel(); // Consume body to avoid leak
   });
 });
 
@@ -158,6 +192,11 @@ describe('Error Handling - Request Body Validation', () => {
     assertStatus(response, 400);
     const body = await response.json();
     assert(body.error, 'Should have error message');
+    assert(
+      body.error.toLowerCase().includes('message') || body.error.toLowerCase().includes('required'),
+      'Error message should indicate missing message field'
+    );
+    // Note: json() already consumes the body
   });
 
   it('should return error for null message', async () => {
@@ -166,6 +205,11 @@ describe('Error Handling - Request Body Validation', () => {
     assertStatus(response, 400);
     const body = await response.json();
     assert(body.error, 'Should have error message');
+    assert(
+      body.error.toLowerCase().includes('message') || body.error.toLowerCase().includes('required') || body.error.toLowerCase().includes('invalid'),
+      'Error message should indicate invalid message'
+    );
+    // Note: json() already consumes the body
   });
 
   it('should return error for empty message', async () => {
@@ -177,6 +221,7 @@ describe('Error Handling - Request Body Validation', () => {
       response.status === 400 || body.state === 'goal_selection',
       'Should handle empty message appropriately'
     );
+    // Note: json() already consumes the body
   });
 
   it('should handle message with only whitespace', async () => {
@@ -184,6 +229,7 @@ describe('Error Handling - Request Body Validation', () => {
 
     // Should handle gracefully - either error or stay in current state
     assert(response.state !== undefined, 'Should return a valid state');
+    assert(response.message.length > 0, 'Should return a helpful message');
   });
 });
 
@@ -255,6 +301,7 @@ describe('Error Handling - Special Characters', () => {
 
     // Should handle without crashing
     assert(response.state !== undefined, 'Should return a valid state');
+    assert(response.message.length > 0, 'Should return an appropriate response message');
   });
 
   it('should handle Arabic diacritics', async () => {
@@ -276,6 +323,7 @@ describe('Error Handling - Special Characters', () => {
 
     // Should handle accented characters
     assert(response.state !== undefined, 'Should return a valid state');
+    assert(response.message.length > 0, 'Should return an appropriate response for accented input');
   });
 });
 
@@ -287,11 +335,15 @@ describe('Error Handling - Retry After Invalid', () => {
   it('should accept valid input after invalid input', async () => {
     const greeting = await chatApi.send({ message: 'Bonjour' });
 
-    // Invalid input
-    await chatApi.send({
+    // Invalid input - should get re-prompt
+    const invalid = await chatApi.send({
       message: 'xyz',
       conversation_id: greeting.conversation_id,
     });
+    assert(
+      invalid.message.includes('1') || invalid.message.toLowerCase().includes('choisir'),
+      'Response should re-prompt with options after invalid input'
+    );
 
     // Valid input
     const valid = await chatApi.send({
@@ -306,10 +358,18 @@ describe('Error Handling - Retry After Invalid', () => {
     const greeting = await chatApi.send({ message: 'Bonjour' });
     const id = greeting.conversation_id!;
 
-    // Multiple invalid inputs
-    await chatApi.send({ message: 'xyz', conversation_id: id });
-    await chatApi.send({ message: '99', conversation_id: id });
-    await chatApi.send({ message: 'abc', conversation_id: id });
+    // Multiple invalid inputs - each should re-prompt
+    const invalid1 = await chatApi.send({ message: 'xyz', conversation_id: id });
+    assert(invalid1.message.length > 0, 'Should return helpful guidance after first invalid');
+
+    const invalid2 = await chatApi.send({ message: '99', conversation_id: id });
+    assert(invalid2.message.length > 0, 'Should return helpful guidance after second invalid');
+
+    const invalid3 = await chatApi.send({ message: 'abc', conversation_id: id });
+    assert(
+      invalid3.message.includes('1') || invalid3.message.toLowerCase().includes('choisir'),
+      'Should continue re-prompting with options'
+    );
 
     // Valid input should still work
     const valid = await chatApi.send({
@@ -360,6 +420,10 @@ describe('Error Handling - Graceful Responses', () => {
     // Should still have a message (re-asking the question)
     assert(invalid.message.length > 0, 'Should return a message');
     assertChatState(invalid, 'goal_selection');
+    assert(
+      invalid.message.includes('1') || invalid.message.toLowerCase().includes('choisir') || invalid.message.toLowerCase().includes('option'),
+      'Response should provide helpful guidance with options'
+    );
   });
 
   it('should maintain conversation state after error', async () => {
@@ -376,6 +440,10 @@ describe('Error Handling - Graceful Responses', () => {
 
     // Should still be at asking_condition
     assertChatState(invalid, 'asking_condition');
+    assert(
+      invalid.message.includes('1') || invalid.message.toLowerCase().includes('choisir') || invalid.message.toLowerCase().includes('état'),
+      'Response should re-prompt with condition options'
+    );
 
     // Valid input should work
     const valid = await chatApi.send({

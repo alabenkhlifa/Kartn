@@ -7,7 +7,7 @@
 import { describe, it } from '../../deps.ts';
 import { assertEquals, assert } from '../../deps.ts';
 import { chatApi, runConversationFlow } from '../../test-utils/api-client.ts';
-import { assertChatState, assertChatLanguage } from '../../test-utils/assertions.ts';
+import { assertChatState, assertChatLanguage, assertMessageContains } from '../../test-utils/assertions.ts';
 
 // ============================================================================
 // Reset via Greeting
@@ -30,6 +30,11 @@ describe('Reset Behavior - Greeting Mid-Flow', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu options appear
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 
   it('should reset when sending "salut" mid-flow', async () => {
@@ -43,6 +48,11 @@ describe('Reset Behavior - Greeting Mid-Flow', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify goal selection keywords appear
+    assert(
+      reset.message.toLowerCase().includes('acheter') || reset.message.includes('1'),
+      'Response should show goal selection menu'
+    );
   });
 
   it('should reset when sending "hello" mid-flow', async () => {
@@ -56,6 +66,11 @@ describe('Reset Behavior - Greeting Mid-Flow', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu options appear
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 
   it('should reset when sending Arabic greeting mid-flow', async () => {
@@ -70,6 +85,11 @@ describe('Reset Behavior - Greeting Mid-Flow', () => {
 
     assertChatState(reset, 'goal_selection');
     assertChatLanguage(reset, 'arabic');
+    // Verify menu options appear in Arabic response
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 
   it('should switch language when greeting in different language', async () => {
@@ -90,6 +110,11 @@ describe('Reset Behavior - Greeting Mid-Flow', () => {
 
     assertChatState(arabic, 'goal_selection');
     assertChatLanguage(arabic, 'arabic');
+    // Verify greeting is in Arabic (contains Arabic characters)
+    assert(
+      /[\u0600-\u06FF]/.test(arabic.message),
+      'Response should contain Arabic text after language switch'
+    );
   });
 });
 
@@ -109,6 +134,11 @@ describe('Reset Behavior - Reset Keywords', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu options appear
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 
   it('should reset when sending "reset"', async () => {
@@ -122,6 +152,11 @@ describe('Reset Behavior - Reset Keywords', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu options appear
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 
   it('should reset when sending "début"', async () => {
@@ -135,6 +170,11 @@ describe('Reset Behavior - Reset Keywords', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify goal selection keywords appear
+    assert(
+      reset.message.toLowerCase().includes('procédure') || reset.message.includes('2'),
+      'Response should show goal selection menu'
+    );
   });
 
   it('should reset when sending "nouveau"', async () => {
@@ -148,6 +188,11 @@ describe('Reset Behavior - Reset Keywords', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu options appear
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 
   it('should reset when sending Arabic "من جديد"', async () => {
@@ -161,6 +206,11 @@ describe('Reset Behavior - Reset Keywords', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu options appear
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 });
 
@@ -179,6 +229,11 @@ describe('Reset Behavior - From Various States', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu reappears
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 
   it('should reset from asking_residency', async () => {
@@ -191,6 +246,11 @@ describe('Reset Behavior - From Various States', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu reappears
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 
   it('should reset from asking_fcr_famille', async () => {
@@ -203,6 +263,11 @@ describe('Reset Behavior - From Various States', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu reappears
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 
   it('should reset from asking_fuel_type', async () => {
@@ -215,6 +280,11 @@ describe('Reset Behavior - From Various States', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu reappears
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 
   it('should reset from asking_budget', async () => {
@@ -227,6 +297,11 @@ describe('Reset Behavior - From Various States', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu reappears
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 
   it('should reset from procedure_info', async () => {
@@ -239,6 +314,11 @@ describe('Reset Behavior - From Various States', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu reappears with keywords like "acheter" or numbered options
+    assert(
+      reset.message.toLowerCase().includes('acheter') || reset.message.includes('1'),
+      'Response should show goal selection menu'
+    );
   });
 
   it('should reset from ev_topic_selection', async () => {
@@ -251,6 +331,11 @@ describe('Reset Behavior - From Various States', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu reappears
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 
   it('should reset from showing_cars state', async () => {
@@ -265,6 +350,11 @@ describe('Reset Behavior - From Various States', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu reappears with all 6 options
+    assert(
+      reset.message.includes('1') && reset.message.includes('6'),
+      'Response should show goal selection menu with options 1-6'
+    );
   });
 });
 
@@ -328,6 +418,11 @@ describe('Reset Behavior - Conversation ID Preservation', () => {
     // Reset
     const reset = await chatApi.send({ message: 'Bonjour', conversation_id: id });
     assertChatState(reset, 'goal_selection');
+    // Verify menu reappears
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
 
     // Continue with new flow
     const newFlow = await chatApi.send({ message: '2', conversation_id: id });
@@ -349,6 +444,11 @@ describe('Reset Behavior - Case Sensitivity', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu reappears
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 
   it('should handle mixed case "BoNjOuR"', async () => {
@@ -360,6 +460,11 @@ describe('Reset Behavior - Case Sensitivity', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu reappears
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 
   it('should handle uppercase "RECOMMENCER"', async () => {
@@ -371,5 +476,10 @@ describe('Reset Behavior - Case Sensitivity', () => {
     });
 
     assertChatState(reset, 'goal_selection');
+    // Verify menu reappears
+    assert(
+      reset.message.includes('1') && reset.message.includes('2'),
+      'Response should show goal selection menu with numbered options'
+    );
   });
 });

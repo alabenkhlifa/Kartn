@@ -213,6 +213,7 @@ export interface ChatResponse {
   cars?: CarResult[];
   calculation?: TaxBreakdown | FCRComparison;
   conversation_id?: string;
+  state?: ConversationState;
 }
 
 // Groq API types

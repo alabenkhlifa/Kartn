@@ -7,7 +7,7 @@
 import { describe, it } from '../../deps.ts';
 import { assertEquals, assert } from '../../deps.ts';
 import { chatApi, runConversationFlow } from '../../test-utils/api-client.ts';
-import { assertChatState } from '../../test-utils/assertions.ts';
+import { assertChatState, assertMessageContains } from '../../test-utils/assertions.ts';
 
 // ============================================================================
 // Helper to get to popular_cars_selection state
@@ -80,6 +80,7 @@ describe('Popular Cars - Eligibility Results', () => {
 
     // Should transition back to goal_selection and show eligible result
     assertChatState(response, 'goal_selection');
+    assertMessageContains(response, '✅', 'Response should show eligible emoji');
     // Response should indicate eligibility
     assert(
       response.message.toLowerCase().includes('éligible') ||
@@ -89,7 +90,7 @@ describe('Popular Cars - Eligibility Results', () => {
     );
   });
 
-  it('should show not eligible result for salary > 1500 TND (option 2)', async () => {
+  it('should show eligible result for couple income (option 2)', async () => {
     const conversationId = await getPopularCarsState();
 
     // Go to eligibility check
@@ -98,14 +99,35 @@ describe('Popular Cars - Eligibility Results', () => {
       conversation_id: conversationId,
     });
 
-    // Select not eligible salary (> 1500 TND)
+    // Select couple income (option 2 - eligible)
     const response = await chatApi.send({
       message: '2',
       conversation_id: conversationId,
     });
 
+    // Should transition back to goal_selection and show eligible result
+    assertChatState(response, 'goal_selection');
+    assertMessageContains(response, '✅', 'Response should show eligible emoji for couple income');
+  });
+
+  it('should show not eligible result for salary > 1500 TND (option 3)', async () => {
+    const conversationId = await getPopularCarsState();
+
+    // Go to eligibility check
+    await chatApi.send({
+      message: '1',
+      conversation_id: conversationId,
+    });
+
+    // Select not eligible salary (> 1500 TND - option 3)
+    const response = await chatApi.send({
+      message: '3',
+      conversation_id: conversationId,
+    });
+
     // Should transition back to goal_selection
     assertChatState(response, 'goal_selection');
+    assertMessageContains(response, '❌', 'Response should show not eligible emoji');
   });
 });
 
@@ -160,6 +182,18 @@ describe('Popular Cars - See Models', () => {
       response.message.length > 100 ||
       response.cars !== undefined,
       'Response should contain car models information'
+    );
+
+    // Verify specific car brands appear in the response
+    const message = response.message.toLowerCase();
+    const hasFiat = message.includes('fiat');
+    const hasRenault = message.includes('renault');
+    const hasDacia = message.includes('dacia');
+    const hasPeugeot = message.includes('peugeot');
+
+    assert(
+      hasFiat || hasRenault || hasDacia || hasPeugeot,
+      'Response should include popular car brands (Fiat, Renault, Dacia, or Peugeot)'
     );
   });
 });
@@ -274,7 +308,7 @@ describe('Popular Cars - Full Flows', () => {
       'Bonjour',
       '6',
       '1',
-      '2',  // not eligible
+      '3',  // not eligible (option 3 is > 1500 TND)
     ]);
 
     assertChatState(responses[3], 'goal_selection');
