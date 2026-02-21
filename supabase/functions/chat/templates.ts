@@ -219,29 +219,35 @@ const TEMPLATES: Templates = {
   },
   asking_popular_eligibility: {
     french: `Pour les voitures populaires, vous devez:
-- Être résident en Tunisie
-- Revenu mensuel < 3x SMIG (environ 1500 TND)
-- Ne pas avoir bénéficié d'une voiture populaire avant
+- Être résident tunisien
+- Revenu mensuel ≤10× SMIG (~4,593 TND) si célibataire
+- Revenu mensuel ≤15× SMIG (~6,889 TND) si couple
+- Ne pas avoir bénéficié d'une voiture populaire dans les 7 dernières années
+- Ne pas avoir possédé de véhicule dans les 5 dernières années
 
 Votre revenu mensuel est:
-1. Moins de 1500 TND
-2. Plus de 1500 TND`,
+1. Dans les limites (≤4,593 TND célibataire / ≤6,889 TND couple)
+2. Au-dessus des limites`,
     arabic: `للسيارات الشعبية، لازم:
-- ساكن في تونس
-- الدخل الشهري أقل من 3x SMIG (حوالي 1500 دينار)
-- ما أخذتش سيارة شعبية قبل
+- مقيم تونسي
+- الدخل الشهري ≤10× SMIG (~4,593 دينار) إذا أعزب
+- الدخل الشهري ≤15× SMIG (~6,889 دينار) إذا متزوج
+- ما أخذتش سيارة شعبية في آخر 7 سنوات
+- ما عندكش كرهبة في آخر 5 سنوات
 
 دخلك الشهري:
-1. أقل من 1500 دينار
-2. أكثر من 1500 دينار`,
+1. في الحدود المسموحة (≤4,593 أعزب / ≤6,889 متزوج)
+2. فوق الحدود`,
     derja: `للكراهب الشعبية، لازم:
-- ساكن في تونس
-- الخلاص الشهري أقل من 1500 دينار
-- ما خذيتش كرهبة شعبية قبل
+- ساكن في تونس وتونسي
+- الخلاص الشهري ≤4,593 دينار إذا وحدك
+- الخلاص الشهري ≤6,889 دينار إذا متزوج
+- ما خذيتش كرهبة شعبية في آخر 7 سنين
+- ما عندكش كرهبة في آخر 5 سنين
 
 خلاصك الشهري:
-1. أقل من 1500
-2. أكثر من 1500`,
+1. في الحدود (≤4,593 وحدك / ≤6,889 متزوج)
+2. فوق الحدود`,
   },
   showing_popular_models: {
     french: '',

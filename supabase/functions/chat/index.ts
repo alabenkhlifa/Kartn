@@ -897,13 +897,17 @@ Réponds en ${language === 'french' ? 'français' : language === 'arabic' ? 'ara
 Les véhicules populaires sont des voitures subventionnées pour les ménages à revenus modestes.
 
 **Modèles actuellement disponibles:**
-- Fiat Punto
-- Renault Symbol
-- Hyundai Grand i10
-- Kia Picanto
+- Suzuki Celerio (Car Pro) — ~28,935 TND
+- Renault Kwid (ARTES) — ~30,000 TND
+- Hyundai Grand i10 (Alpha) — ~32,000 TND
+- Kia Picanto (City Cars) — ~33,000 TND
+- Chery Tiggo 1X (Chery TN) — ~33,500 TND
+- Citroën C3 (STAFIM) — ~34,000 TND
+- Mitsubishi Mirage (Italcar) — ~34,000 TND
+- Mitsubishi Attrage (Italcar) — ~34,876 TND
+- Peugeot 208 (STAFIM) — ~35,000 TND
 
-**Prix indicatifs:**
-- 20,000 - 35,000 TND (avec subvention)
+**Prix:** 29,000 - 35,000 TND
 
 **Où acheter:**
 - Concessionnaires officiels agréés
@@ -917,13 +921,17 @@ Voulez-vous chercher une voiture?
 السيارات الشعبية هي سيارات مدعومة للعائلات ذات الدخل المحدود.
 
 **الموديلات المتاحة حالياً:**
-- Fiat Punto
-- Renault Symbol
-- Hyundai Grand i10
-- Kia Picanto
+- Suzuki Celerio (Car Pro) — ~28,935 دينار
+- Renault Kwid (ARTES) — ~30,000 دينار
+- Hyundai Grand i10 (Alpha) — ~32,000 دينار
+- Kia Picanto (City Cars) — ~33,000 دينار
+- Chery Tiggo 1X (Chery TN) — ~33,500 دينار
+- Citroën C3 (STAFIM) — ~34,000 دينار
+- Mitsubishi Mirage (Italcar) — ~34,000 دينار
+- Mitsubishi Attrage (Italcar) — ~34,876 دينار
+- Peugeot 208 (STAFIM) — ~35,000 دينار
 
-**الأسعار التقريبية:**
-- 20,000 - 35,000 دينار (مع الدعم)
+**الأسعار:** 29,000 - 35,000 دينار
 
 **أين تشتري:**
 - الوكلاء الرسميون المعتمدون
@@ -937,13 +945,17 @@ Voulez-vous chercher une voiture?
 الكراهب الشعبية هي كراهب مدعومة للعايلات اللي دخلها محدود.
 
 **الموديلات الموجودة:**
-- Fiat Punto
-- Renault Symbol
-- Hyundai Grand i10
-- Kia Picanto
+- Suzuki Celerio (Car Pro) — ~28,935 دينار
+- Renault Kwid (ARTES) — ~30,000 دينار
+- Hyundai Grand i10 (Alpha) — ~32,000 دينار
+- Kia Picanto (City Cars) — ~33,000 دينار
+- Chery Tiggo 1X (Chery TN) — ~33,500 دينار
+- Citroën C3 (STAFIM) — ~34,000 دينار
+- Mitsubishi Mirage (Italcar) — ~34,000 دينار
+- Mitsubishi Attrage (Italcar) — ~34,876 دينار
+- Peugeot 208 (STAFIM) — ~35,000 دينار
 
-**الأسعار:**
-- 20,000 - 35,000 دينار (مع الدعم)
+**الأسعار:** 29,000 - 35,000 دينار
 
 **وين تشري:**
 - الوكلاء الرسميين
@@ -1002,7 +1014,7 @@ Voulez-vous voir les modèles disponibles?
           const notEligibleMessage: Record<Language, string> = {
             french: `❌ **Malheureusement, vous n'êtes pas éligible aux voitures populaires.**
 
-Le programme est réservé aux ménages avec un revenu mensuel inférieur à 3x SMIG (~1500 TND).
+Le programme est réservé aux ménages avec un revenu mensuel ≤10× SMIG (~4,593 TND célibataire) ou ≤15× SMIG (~6,889 TND couple).
 
 Alternatives:
 - Chercher une voiture d'occasion économique
@@ -1013,7 +1025,7 @@ Voulez-vous chercher une autre voiture?
 2. Non, retour au menu`,
             arabic: `❌ **للأسف، أنت غير مؤهل للسيارات الشعبية.**
 
-البرنامج مخصص للعائلات ذات دخل شهري أقل من 3x SMIG (~1500 دينار).
+البرنامج مخصص للعائلات ذات دخل شهري ≤10× SMIG (~4,593 دينار أعزب) أو ≤15× SMIG (~6,889 دينار متزوج).
 
 بدائل:
 - ابحث عن سيارة مستعملة اقتصادية
@@ -1024,7 +1036,7 @@ Voulez-vous chercher une autre voiture?
 2. لا، رجوع للقائمة`,
             derja: `❌ **للأسف، ما عندكش الحق في الكراهب الشعبية.**
 
-البرنامج للعايلات اللي دخلها أقل من 1500 دينار في الشهر.
+البرنامج للناس اللي دخلها ≤4,593 دينار (وحدك) ولا ≤6,889 دينار (متزوج).
 
 بدائل:
 - لوج على كرهبة مستعملة رخيصة
