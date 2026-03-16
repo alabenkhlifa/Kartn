@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS favorites (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
-  car_id UUID NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
+  car_id TEXT NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(conversation_id, car_id)
 );
