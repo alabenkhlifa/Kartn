@@ -31,6 +31,10 @@ const BRAND_RELIABILITY: Record<string, number> = {
   mitsubishi: 7.0,
   chevrolet: 6.5,
   jeep: 6.0,
+  'ds automobiles': 6.5,
+  ds: 6.5,
+  'land rover': 5.5,
+  volvo: 8.0,
   // Chinese brands (newer, less data)
   byd: 7.0,
   mg: 6.5,
@@ -72,7 +76,11 @@ const PARTS_AVAILABILITY: Record<string, number> = {
   chevrolet: 6.0,
   jeep: 5.5,
   'alfa romeo': 5.0,
-  lexus: 5.0,
+  lexus: 6.0, // shares Toyota parts
+  'ds automobiles': 6.0, // PSA/Stellantis network
+  ds: 6.0,
+  'land rover': 4.5, // KB: difficult availability
+  volvo: 5.5,
   // Chinese brands
   byd: 6.0,
   mg: 5.5,
@@ -109,46 +117,103 @@ function getFuelEfficiencyScore(fuelType: string, engineCc: number | null): numb
   return 4;
 }
 
+// Average shipping cost Europe→Tunisia (EUR) — added to price to form CIF
+const AVERAGE_SHIPPING_EUR = 1200;
+
 /**
- * Calculate estimated total cost in TND
- * Uses engine-size-aware tax estimation for imports
+ * Get consumption tax (DC) rate based on engine size and fuel type
+ * Source: KB/customs-taxes.md — "Taxe de Consommation" tables
  */
-function calculateEstimatedTotalTnd(car: CarResult, isFcrEligible: boolean): number {
+function getDcRate(cc: number, fuel: string, bodyType: string | null): number {
+  const body = (bodyType || '').toLowerCase();
+  const is4x4 = body.includes('suv') || body.includes('4x4') || body.includes('pick');
+
+  if (fuel.includes('electric') || fuel.includes('hybrid_rechargeable') || fuel.includes('plug')) return 0;
+  if (fuel.includes('hybrid') && cc <= 1700) return getDcRate(cc, 'essence', null) * 0.5; // HEV ≤1700cc: 50% reduction
+
+  // 4x4 / SUV: flat 90% DC under régime commun
+  if (is4x4) return 0.90;
+
+  if (fuel.includes('diesel')) {
+    if (cc <= 1500) return 0.38;
+    if (cc <= 1700) return 0.38;
+    if (cc <= 1900) return 0.40;
+    if (cc <= 2100) return 0.55;
+    if (cc <= 2300) return 0.63;
+    if (cc <= 2500) return 0.70;
+    return 0.88;
+  }
+  // Essence
+  if (cc <= 1000) return 0.16;
+  if (cc <= 1300) return 0.16;
+  if (cc <= 1500) return 0.30;
+  if (cc <= 1700) return 0.38;
+  if (cc <= 2000) return 0.52;
+  if (cc <= 2400) return 0.67;
+  return 0.67;
+}
+
+/**
+ * Calculate estimated total cost in TND using the actual tax formula from KB.
+ *
+ * Formula (KB/customs-taxes.md):
+ *   CIF = price + shipping + insurance
+ *   DD  = CIF × dd_rate (0% for EU)
+ *   DC  = (CIF + DD) × dc_rate
+ *   TVA = (CIF + DD + DC) × tva_rate
+ *   TFD = (DD + DC) × 3%
+ *   total_taxes = DD + DC + TVA + TFD
+ *
+ * FCR TRE: final = CIF + (total_taxes × 0.25)   [25% of normal taxes]
+ * FCR Famille: DC = 10%, TVA = 7%, electric/hybrid DC = 0%
+ * Régime Commun: full rates
+ */
+function calculateEstimatedTotalTnd(
+  car: CarResult,
+  regime: 'fcr_tre' | 'fcr_famille' | 'commun'
+): number {
   if (car.price_tnd && car.country === 'TN') {
     return car.price_tnd;
   }
 
   if (car.price_eur) {
-    const cifTnd = car.price_eur * EXCHANGE_RATE.effective_rate;
     const cc = car.engine_cc || 1400;
     const fuel = (car.fuel_type || '').toLowerCase();
+    const isElectric = fuel.includes('electric');
+    const isPhev = fuel.includes('hybrid_rechargeable') || fuel.includes('plug');
 
-    if (isFcrEligible) {
-      // FCR TRE: reduced customs + TVA 7% + minimal consumption tax
-      // Estimate: CIF + ~15-35% depending on engine size
-      let fcrMultiplier = 1.15; // Base: shipping + handling + 7% TVA
-      if (fuel.includes('electric')) fcrMultiplier = 1.10;
-      else if (fuel.includes('hybrid')) fcrMultiplier = 1.12;
-      else if (cc <= 1600) fcrMultiplier = 1.20;
-      else if (cc <= 2000) fcrMultiplier = 1.28;
-      else fcrMultiplier = 1.35;
-      return Math.round(cifTnd * fcrMultiplier);
+    // CIF = price + shipping + insurance (all converted to TND)
+    const cif = (car.price_eur + AVERAGE_SHIPPING_EUR) * EXCHANGE_RATE.effective_rate;
+
+    // Assume EU origin (0% customs) — most cars in DB are from EU
+    const ddRate = 0;
+    const dd = cif * ddRate;
+
+    if (regime === 'fcr_tre' && car.fcr_tre_eligible) {
+      // FCR TRE: calculate full taxes, then pay only 25%
+      const dcRate = getDcRate(cc, fuel, car.body_type);
+      const dc = (cif + dd) * dcRate;
+      const tvaRate = (isElectric || isPhev) ? 0.07 : 0.19;
+      const tva = (cif + dd + dc) * tvaRate;
+      const tfd = (dd + dc) * 0.03;
+      const totalTaxes = dd + dc + tva + tfd;
+      return Math.round(cif + totalTaxes * 0.25);
+
+    } else if (regime === 'fcr_famille' && car.fcr_famille_eligible) {
+      // FCR Famille (Art.55): DC = 10% (0% for electric/hybrid), TVA = 7%
+      const dcRate = (isElectric || isPhev) ? 0 : 0.10;
+      const dc = (cif + dd) * dcRate;
+      const tva = (cif + dd + dc) * 0.07;
+      const tfd = (dd + dc) * 0.03;
+      return Math.round(cif + dd + dc + tva + tfd);
+
     } else {
-      // Regular import: customs 20% + consumption tax + TVA 19% + TFD
-      let regularMultiplier = 2.0;
-      if (fuel.includes('electric')) regularMultiplier = 1.3;
-      else if (fuel.includes('hybrid')) regularMultiplier = 1.5;
-      else if (fuel.includes('diesel')) {
-        if (cc <= 1500) regularMultiplier = 2.0;
-        else if (cc <= 1900) regularMultiplier = 2.2;
-        else regularMultiplier = 2.6;
-      } else {
-        if (cc <= 1300) regularMultiplier = 1.8;
-        else if (cc <= 1700) regularMultiplier = 2.1;
-        else if (cc <= 2000) regularMultiplier = 2.4;
-        else regularMultiplier = 2.8;
-      }
-      return Math.round(cifTnd * regularMultiplier);
+      // Régime Commun: full tax rates
+      const dcRate = getDcRate(cc, fuel, car.body_type);
+      const dc = (cif + dd) * dcRate;
+      const tva = (cif + dd + dc) * 0.19;
+      const tfd = (dd + dc) * 0.03;
+      return Math.round(cif + dd + dc + tva + tfd);
     }
   }
 
@@ -173,8 +238,13 @@ export function scoreCar(
   };
 
   const budget = conversation.budget_tnd || 100000;
-  const isFcrEligible = car.fcr_tre_eligible || car.fcr_famille_eligible;
-  const estimatedTotalTnd = calculateEstimatedTotalTnd(car, isFcrEligible);
+
+  // Determine import regime based on user's conversation flow
+  const regime: 'fcr_tre' | 'fcr_famille' | 'commun' =
+    (conversation.residency === 'abroad' && car.fcr_tre_eligible) ? 'fcr_tre' :
+    (conversation.residency === 'local' && conversation.fcr_famille && car.fcr_famille_eligible) ? 'fcr_famille' :
+    'commun';
+  const estimatedTotalTnd = calculateEstimatedTotalTnd(car, regime);
 
   // === 1. PRICE FIT (0-30 points) ===
   // How well does the estimated total fit the budget?
