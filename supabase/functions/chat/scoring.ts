@@ -111,24 +111,44 @@ function getFuelEfficiencyScore(fuelType: string, engineCc: number | null): numb
 
 /**
  * Calculate estimated total cost in TND
+ * Uses engine-size-aware tax estimation for imports
  */
 function calculateEstimatedTotalTnd(car: CarResult, isFcrEligible: boolean): number {
   if (car.price_tnd && car.country === 'TN') {
-    // Local car - price is final
     return car.price_tnd;
   }
 
   if (car.price_eur) {
-    // Import car - estimate total with taxes
     const cifTnd = car.price_eur * EXCHANGE_RATE.effective_rate;
+    const cc = car.engine_cc || 1400;
+    const fuel = (car.fuel_type || '').toLowerCase();
 
-    // Simplified tax estimation
     if (isFcrEligible) {
-      // FCR: ~20-30% additional costs (shipping + reduced taxes)
-      return Math.round(cifTnd * 1.25);
+      // FCR TRE: reduced customs + TVA 7% + minimal consumption tax
+      // Estimate: CIF + ~15-35% depending on engine size
+      let fcrMultiplier = 1.15; // Base: shipping + handling + 7% TVA
+      if (fuel.includes('electric')) fcrMultiplier = 1.10;
+      else if (fuel.includes('hybrid')) fcrMultiplier = 1.12;
+      else if (cc <= 1600) fcrMultiplier = 1.20;
+      else if (cc <= 2000) fcrMultiplier = 1.28;
+      else fcrMultiplier = 1.35;
+      return Math.round(cifTnd * fcrMultiplier);
     } else {
-      // Regular import: ~150-200% taxes
-      return Math.round(cifTnd * 2.5);
+      // Regular import: customs 20% + consumption tax + TVA 19% + TFD
+      let regularMultiplier = 2.0;
+      if (fuel.includes('electric')) regularMultiplier = 1.3;
+      else if (fuel.includes('hybrid')) regularMultiplier = 1.5;
+      else if (fuel.includes('diesel')) {
+        if (cc <= 1500) regularMultiplier = 2.0;
+        else if (cc <= 1900) regularMultiplier = 2.2;
+        else regularMultiplier = 2.6;
+      } else {
+        if (cc <= 1300) regularMultiplier = 1.8;
+        else if (cc <= 1700) regularMultiplier = 2.1;
+        else if (cc <= 2000) regularMultiplier = 2.4;
+        else regularMultiplier = 2.8;
+      }
+      return Math.round(cifTnd * regularMultiplier);
     }
   }
 
@@ -156,46 +176,51 @@ export function scoreCar(
   const isFcrEligible = car.fcr_tre_eligible || car.fcr_famille_eligible;
   const estimatedTotalTnd = calculateEstimatedTotalTnd(car, isFcrEligible);
 
-  // === 1. PRICE FIT (0-25 points) ===
+  // === 1. PRICE FIT (0-30 points) ===
   // How well does the estimated total fit the budget?
+  // Curve peaks at 70-90% of budget (best value), drops steeply over 100%
   const budgetRatio = estimatedTotalTnd / budget;
 
-  if (budgetRatio <= 0.6) {
-    scores.price_fit = 20; // Well under budget - good but might be leaving value on table
-  } else if (budgetRatio <= 0.8) {
-    scores.price_fit = 25; // Sweet spot - maximizing value
-  } else if (budgetRatio <= 0.95) {
-    scores.price_fit = 22; // Close to budget - acceptable
+  if (budgetRatio <= 0.3) {
+    scores.price_fit = 8;  // Way under budget — suspiciously cheap or poor value
+  } else if (budgetRatio <= 0.5) {
+    scores.price_fit = 15; // Under budget — decent but leaving money on table
+  } else if (budgetRatio <= 0.7) {
+    scores.price_fit = 25; // Good value zone
+  } else if (budgetRatio <= 0.9) {
+    scores.price_fit = 30; // Sweet spot — maximizing value within budget
   } else if (budgetRatio <= 1.0) {
-    scores.price_fit = 18; // At budget limit
+    scores.price_fit = 22; // At budget limit — acceptable
   } else if (budgetRatio <= 1.1) {
     scores.price_fit = 10; // Slightly over budget
   } else if (budgetRatio <= 1.2) {
-    scores.price_fit = 5; // Over budget
+    scores.price_fit = 3;  // Over budget — last resort
   } else {
-    scores.price_fit = 0; // Way over budget
+    scores.price_fit = 0;  // Way over budget
   }
 
-  // === 2. AGE SCORE (0-20 points) ===
+  // === 2. AGE SCORE (0-18 points) ===
   const currentYear = new Date().getFullYear();
   const carAge = currentYear - car.year;
 
   if (carAge <= 1) {
-    scores.age = 20;
-  } else if (carAge <= 2) {
     scores.age = 18;
-  } else if (carAge <= 3) {
+  } else if (carAge <= 2) {
     scores.age = 16;
-  } else if (carAge <= 4) {
+  } else if (carAge <= 3) {
     scores.age = 14;
-  } else if (carAge <= 5) {
+  } else if (carAge <= 4) {
     scores.age = 12;
-  } else if (carAge <= 6) {
-    scores.age = 9;
-  } else if (carAge <= 8) {
-    scores.age = 6;
+  } else if (carAge <= 5) {
+    scores.age = 10;
+  } else if (carAge <= 7) {
+    scores.age = 7;
+  } else if (carAge <= 10) {
+    scores.age = 4;
+  } else if (carAge <= 15) {
+    scores.age = 2;
   } else {
-    scores.age = 3;
+    scores.age = 0; // 15+ years — no age points
   }
 
   // === 3. MILEAGE SCORE (0-15 points) ===
@@ -214,9 +239,11 @@ export function scoreCar(
   } else if (mileage < 100000) {
     scores.mileage = 6;
   } else if (mileage < 150000) {
-    scores.mileage = 4;
+    scores.mileage = 3;
+  } else if (mileage < 200000) {
+    scores.mileage = 1;
   } else {
-    scores.mileage = 2;
+    scores.mileage = 0; // 200k+ km — no mileage points
   }
 
   // === 4. RELIABILITY SCORE (0-15 points) ===
@@ -320,10 +347,19 @@ export function rankCars(
   // Score all cars
   const scoredCars = cars.map((car) => scoreCar(car, conversation));
 
-  // Sort by score (highest first)
-  scoredCars.sort((a, b) => b.score - a.score);
+  // Quality floor: exclude cars that are clearly poor recommendations
+  const filtered = scoredCars.filter((car) => {
+    const age = new Date().getFullYear() - car.year;
+    if (age > 15) return false;         // No cars older than 15 years
+    if ((car.mileage_km || 0) > 250000) return false;  // No extreme mileage
+    if (car.score < 25) return false;   // Minimum quality threshold
+    return true;
+  });
 
-  return scoredCars;
+  // Sort by score (highest first)
+  filtered.sort((a, b) => b.score - a.score);
+
+  return filtered;
 }
 
 /**

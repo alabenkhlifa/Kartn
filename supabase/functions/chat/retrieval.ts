@@ -194,12 +194,15 @@ export async function searchCars(
   }
 
   if (filters.budget_max) {
-    // For budget filtering, we're more lenient (allow up to 20% over)
-    // The scoring system will penalize over-budget cars
+    // For TND cars: allow up to 20% over budget (scoring penalizes)
     const maxBudgetTnd = filters.budget_max * 1.2;
-    const maxBudgetEur = (filters.budget_max / EXCHANGE_RATE.rate) * 1.2;
+    // For EUR cars: account for import costs (~1.25x CIF for FCR, ~2x for regular)
+    // Use conservative FCR multiplier to not exclude valid candidates
+    // CIF = EUR × effective_rate, then × 1.2 for FCR costs, then × 1.2 margin
+    const fcrMultiplier = EXCHANGE_RATE.effective_rate * 1.2;
+    const maxBudgetEur = (filters.budget_max * 1.2) / fcrMultiplier;
     query = query.or(
-      `and(price_tnd.not.is.null,price_tnd.lte.${maxBudgetTnd}),and(price_eur.not.is.null,price_eur.lte.${maxBudgetEur})`
+      `and(price_tnd.not.is.null,price_tnd.lte.${maxBudgetTnd}),and(price_eur.not.is.null,price_eur.lte.${Math.round(maxBudgetEur)})`
     );
   }
 
