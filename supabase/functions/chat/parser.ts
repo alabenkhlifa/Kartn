@@ -12,38 +12,62 @@ import { Goal, CarOrigin, Residency, FuelPreference, CarTypePreference, Conditio
  * 5. Parcourir les offres → browse_offers
  * 6. Voitures populaires → popular_cars
  */
-export function parseGoal(input: string): Goal | null {
+export function parseGoal(input: string, strict: boolean = false): Goal | null {
   const trimmed = input.trim().toLowerCase();
   const firstChar = trimmed.charAt(0);
 
-  // 1. Acheter une voiture / Buy a car
-  if (firstChar === '1' || trimmed.includes('acheter') || trimmed.includes('cherche') || trimmed.includes('تشري') || trimmed.includes('شراء')) {
-    return 'find_car';
-  }
-  // 2. Procédures FCR
-  if (firstChar === '2' || trimmed.includes('procédure') || trimmed.includes('fcr') || trimmed.includes('إجراءات')) {
-    return 'procedure';
-  }
-  // 3. Comparer des voitures
-  if (firstChar === '3' || trimmed.includes('compar') || trimmed.includes('vs') || trimmed.includes('مقارن') || trimmed.includes('تقارن')) {
-    return 'compare_cars';
-  }
-  // 4. Infos véhicules électriques
-  if (firstChar === '4' || trimmed.includes('électrique') || trimmed.includes('ev') || trimmed.includes('كهربائ')) {
-    return 'ev_info';
-  }
-  // 5. Parcourir les offres / Browse offers
-  if (firstChar === '5' || trimmed.includes('parcourir') || trimmed.includes('offre') || trimmed.includes('تصفح') || trimmed.includes('عروض') || trimmed.includes('تشوف')) {
-    return 'browse_offers';
-  }
-  // 6. Voitures populaires
-  if (firstChar === '6' || trimmed.includes('populaire') || trimmed.includes('subvention') || trimmed.includes('شعبي') || trimmed.includes('مدعوم')) {
-    return 'popular_cars';
-  }
+  if (!strict) {
+    // Non-strict mode: accept numbers and loose keywords (for goal_selection state)
+    // 1. Acheter une voiture / Buy a car
+    if (firstChar === '1' || trimmed.includes('acheter') || trimmed.includes('cherche') || trimmed.includes('تشري') || trimmed.includes('شراء')) {
+      return 'find_car';
+    }
+    // 2. Procédures FCR
+    if (firstChar === '2' || trimmed.includes('procédure') || trimmed.includes('fcr') || trimmed.includes('إجراءات')) {
+      return 'procedure';
+    }
+    // 3. Comparer des voitures
+    if (firstChar === '3' || trimmed.includes('compar') || trimmed.includes('vs') || trimmed.includes('مقارن') || trimmed.includes('تقارن')) {
+      return 'compare_cars';
+    }
+    // 4. Infos véhicules électriques
+    if (firstChar === '4' || trimmed.includes('électrique') || trimmed.includes('ev') || trimmed.includes('كهربائ')) {
+      return 'ev_info';
+    }
+    // 5. Parcourir les offres / Browse offers
+    if (firstChar === '5' || trimmed.includes('parcourir') || trimmed.includes('offre') || trimmed.includes('تصفح') || trimmed.includes('عروض') || trimmed.includes('تشوف')) {
+      return 'browse_offers';
+    }
+    // 6. Voitures populaires
+    if (firstChar === '6' || trimmed.includes('populaire') || trimmed.includes('subvention') || trimmed.includes('شعبي') || trimmed.includes('مدعوم')) {
+      return 'popular_cars';
+    }
 
-  // Fallback keyword matching for common terms (not tied to numbers)
-  if (trimmed.includes('voiture') || trimmed.includes('كرهبة')) {
-    return 'find_car';
+    // Fallback keyword matching for common terms (not tied to numbers)
+    if (trimmed.includes('voiture') || trimmed.includes('كرهبة')) {
+      return 'find_car';
+    }
+  } else {
+    // Strict mode: only explicit keyword matches, NO numbers, NO loose fallbacks
+    // Used in "showing" states to prevent false positives
+    if (trimmed.includes('acheter') || trimmed.includes('cherche') || trimmed.includes('تشري') || trimmed.includes('شراء')) {
+      return 'find_car';
+    }
+    if (trimmed.includes('procédure') || trimmed.includes('fcr') || trimmed.includes('إجراءات')) {
+      return 'procedure';
+    }
+    if (trimmed.includes('compar') || trimmed.includes('vs') || trimmed.includes('مقارن') || trimmed.includes('تقارن')) {
+      return 'compare_cars';
+    }
+    if (trimmed.includes('électrique') || trimmed.includes('كهربائ')) {
+      return 'ev_info';
+    }
+    if (trimmed.includes('parcourir') || trimmed.includes('تصفح') || trimmed.includes('عروض')) {
+      return 'browse_offers';
+    }
+    if (trimmed.includes('populaire') || trimmed.includes('subvention') || trimmed.includes('شعبي') || trimmed.includes('مدعوم')) {
+      return 'popular_cars';
+    }
   }
 
   return null;
@@ -117,14 +141,21 @@ export function parseBudget(input: string): number | null {
   // Handle "70k" format
   if (cleaned.endsWith('k')) {
     const num = parseFloat(cleaned.slice(0, -1));
-    if (!isNaN(num)) return num * 1000;
+    if (!isNaN(num)) {
+      const value = num * 1000;
+      if (value < 10000 || value > 1000000) return null;
+      return value;
+    }
   }
 
   // Handle plain number
   const num = parseFloat(cleaned);
   if (!isNaN(num) && num > 0) {
     // If less than 500, assume it's in thousands
-    return num < 500 ? num * 1000 : num;
+    const value = num < 500 ? num * 1000 : num;
+    // Bounds check: reject unreasonable budget values
+    if (value < 10000 || value > 1000000) return null;
+    return value;
   }
 
   return null;
@@ -150,6 +181,18 @@ export function isReset(input: string): boolean {
   const trimmed = input.trim().toLowerCase();
   const resets = ['recommencer', 'reset', 'début', 'start', 'nouveau', 'من جديد'];
   return resets.some(r => trimmed.includes(r));
+}
+
+/**
+ * Check if message is asking to go back one step
+ */
+export function parseBack(input: string): boolean {
+  const trimmed = input.trim().toLowerCase();
+  const backWords = [
+    'retour', 'back', 'رجوع', 'précédent', 'previous',
+    'ارجع', 'نرجع', 'revenir', 'رجّعني', 'قبل',
+  ];
+  return backWords.some(b => trimmed.includes(b));
 }
 
 /**
@@ -278,14 +321,21 @@ export function parsePrice(input: string): number | null {
   // Handle "k" suffix (e.g., "15k" → 15000)
   if (cleaned.endsWith('k')) {
     const num = parseFloat(cleaned.slice(0, -1));
-    if (!isNaN(num) && num > 0) return num * 1000;
+    if (!isNaN(num) && num > 0) {
+      const value = num * 1000;
+      if (value < 500 || value > 200000) return null;
+      return value;
+    }
   }
 
   // Parse as plain number
   const num = parseFloat(cleaned);
   if (!isNaN(num) && num > 0) {
     // If less than 500, assume it's in thousands
-    return num < 500 ? num * 1000 : num;
+    const value = num < 500 ? num * 1000 : num;
+    // Bounds check: reject unreasonable price values
+    if (value < 500 || value > 200000) return null;
+    return value;
   }
 
   return null;

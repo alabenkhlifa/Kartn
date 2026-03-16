@@ -1,3 +1,4 @@
+import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { MODELS, OFF_TOPIC_RESPONSES, SYSTEM_PROMPTS } from './config.ts';
 import {
   calculateTax,
@@ -5,18 +6,24 @@ import {
   formatFCRComparison,
   formatTaxBreakdown,
 } from './calculator.ts';
+import { getLLMProvider, getFallbackProvider } from './providers/factory.ts';
+import { getCachedResponse, setCachedResponse } from './response-cache.ts';
 import {
   CalculationParams,
   CarResult,
   ClassificationResult,
   FCRComparison,
-  GroqChatRequest,
-  GroqChatResponse,
   KnowledgeChunk,
   Language,
   RetrievalContext,
   TaxBreakdown,
 } from './types.ts';
+
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
+
+const MAX_CONTEXT_TOKENS = 3000;
 
 /**
  * Format knowledge chunks for context
@@ -130,10 +137,13 @@ export async function generateResponse(
   userMessage: string,
   classification: ClassificationResult,
   context: RetrievalContext,
-  groqApiKey: string
+  groqApiKey: string,
+  messageHistory?: Array<{ role: string; content: string }>,
+  supabase?: SupabaseClient
 ): Promise<{
   message: string;
   calculation?: TaxBreakdown | FCRComparison;
+  suggestions?: string[];
 }> {
   // Handle off-topic immediately
   if (classification.intent === 'off_topic') {
@@ -149,49 +159,93 @@ export async function generateResponse(
     context.calculation = calcResult;
   }
 
-  // Build context string
-  const contextStr = buildContext(context, calcResult);
+  // Build context string with token guard
+  let contextStr = buildContext(context, calcResult);
+  if (estimateTokens(contextStr) > MAX_CONTEXT_TOKENS) {
+    while (context.knowledge_chunks.length > 1 && estimateTokens(buildContext(context, calcResult)) > MAX_CONTEXT_TOKENS) {
+      context.knowledge_chunks.pop();
+    }
+    contextStr = buildContext(context, calcResult);
+    console.log(`Context trimmed to ${estimateTokens(contextStr)} estimated tokens`);
+  }
 
   // Build prompt
   const userPrompt = contextStr
     ? `Context:\n${contextStr}\n\n---\n\nUser question: ${userMessage}`
     : `User question: ${userMessage}`;
 
-  const request: GroqChatRequest = {
-    model: MODELS.generator,
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPTS.generator },
-      { role: 'user', content: userPrompt },
-    ],
-    temperature: 0.7,
-    max_tokens: 300,
-  };
+  // Check cache for knowledge/eligibility queries (not car search - results change)
+  if (supabase && classification.intent !== 'car_search') {
+    const cached = await getCachedResponse(userMessage, classification.intent, supabase);
+    if (cached) {
+      return {
+        message: cached.message,
+        calculation: calcResult,
+        suggestions: cached.suggestions,
+      };
+    }
+  }
 
   try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${groqApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    });
+    const provider = getLLMProvider();
+    const chatOptions = {
+      model: MODELS.generator,
+      messages: [
+        { role: 'system' as const, content: SYSTEM_PROMPTS.generator },
+        ...((messageHistory || []).map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))),
+        { role: 'user' as const, content: userPrompt },
+      ],
+      temperature: 0.7,
+      max_tokens: 500,
+    };
+    let result;
+    try {
+      result = await provider.chat(chatOptions);
+    } catch (primaryErr) {
+      const fallback = getFallbackProvider();
+      if (fallback) {
+        console.error(JSON.stringify({ error: 'Primary LLM failed for generation, trying fallback', detail: primaryErr instanceof Error ? primaryErr.message : String(primaryErr) }));
+        result = await fallback.chat(chatOptions);
+      } else {
+        throw primaryErr;
+      }
+    }
+    const rawMessage = result.content || 'Désolé, une erreur est survenue.';
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('Groq generation error:', error);
-      throw new Error(`Groq API error: ${response.status}`);
+    // Parse out follow-up suggestions (lines starting with Q:)
+    const lines = rawMessage.split('\n');
+    const suggestions: string[] = [];
+    const messageLines: string[] = [];
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('Q:') || trimmed.startsWith('Q :')) {
+        const suggestion = trimmed.replace(/^Q\s*:\s*/, '').trim();
+        if (suggestion) suggestions.push(suggestion);
+      } else {
+        messageLines.push(line);
+      }
     }
 
-    const data: GroqChatResponse = await response.json();
-    const message = data.choices[0]?.message?.content || 'Désolé, une erreur est survenue.';
+    const message = messageLines.join('\n').trim();
+
+    // Cache the response for future use
+    if (supabase && classification.intent !== 'car_search') {
+      void setCachedResponse(userMessage, classification.intent, { message, suggestions: suggestions.length > 0 ? suggestions : undefined }, supabase);
+    }
 
     return {
       message,
       calculation: calcResult,
+      suggestions: suggestions.length > 0 ? suggestions : undefined,
     };
   } catch (error) {
-    console.error('Generation error:', error);
+    console.error(JSON.stringify({
+      error: 'Generation failed',
+      detail: error instanceof Error ? error.message : String(error),
+      intent: classification.intent,
+      language: classification.language,
+    }));
 
     // Fallback response in detected language
     const fallbacks: Record<Language, string> = {
@@ -204,4 +258,88 @@ export async function generateResponse(
       message: fallbacks[classification.language],
     };
   }
+}
+
+/**
+ * Generate response as a stream using SSE
+ */
+export async function generateResponseStream(
+  userMessage: string,
+  classification: ClassificationResult,
+  context: RetrievalContext,
+  _groqApiKey: string,
+  messageHistory?: Array<{ role: string; content: string }>
+): Promise<ReadableStream<Uint8Array>> {
+  // Build context string (same as generateResponse)
+  const contextStr = buildContext(context);
+  const userPrompt = contextStr
+    ? `Context:\n${contextStr}\n\n---\n\nUser question: ${userMessage}`
+    : `User question: ${userMessage}`;
+
+  const provider = getLLMProvider();
+  const encoder = new TextEncoder();
+
+  const rawStream = await provider.chatStream({
+    model: MODELS.generator,
+    messages: [
+      { role: 'system', content: SYSTEM_PROMPTS.generator },
+      ...((messageHistory || []).map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))),
+      { role: 'user', content: userPrompt },
+    ],
+    temperature: 0.7,
+    max_tokens: 500,
+    stream: true,
+  });
+
+  // Transform the raw SSE stream into our own SSE format
+  const reader = rawStream.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      try {
+        const { done, value } = await reader.read();
+        if (done) {
+          // Send done event
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          controller.close();
+          return;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith('data: ')) continue;
+
+          const data = trimmed.slice(6);
+          if (data === '[DONE]') {
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            controller.close();
+            return;
+          }
+
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              const chunk = JSON.stringify({ content });
+              controller.enqueue(encoder.encode(`data: ${chunk}\n\n`));
+            }
+          } catch {
+            // Skip malformed chunks
+          }
+        }
+      } catch (error) {
+        console.error('Stream error:', error);
+        controller.error(error);
+      }
+    },
+    cancel() {
+      reader.cancel();
+    },
+  });
 }

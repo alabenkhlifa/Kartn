@@ -1,6 +1,7 @@
 import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { RETRIEVAL_CONFIG } from './config.ts';
+import { RETRIEVAL_CONFIG, EXCHANGE_RATE } from './config.ts';
 import { generateQueryEmbedding } from './embeddings.ts';
+import { rerankChunks } from './reranker.ts';
 import {
   CarResult,
   CarSearchFilters,
@@ -8,6 +9,36 @@ import {
   KnowledgeChunk,
   RetrievalContext,
 } from './types.ts';
+
+/**
+ * Apply feedback-based score boost to retrieved chunks.
+ * Adjusts similarity by up to ±5% based on aggregated user feedback.
+ */
+async function applyFeedbackBoost(
+  chunks: KnowledgeChunk[],
+  supabase: SupabaseClient
+): Promise<KnowledgeChunk[]> {
+  if (chunks.length === 0) return chunks;
+
+  const chunkIds = chunks.map(c => c.id);
+  const { data: feedbackScores } = await supabase
+    .from('chunk_feedback_scores')
+    .select('chunk_id, feedback_score')
+    .in('chunk_id', chunkIds);
+
+  if (feedbackScores && feedbackScores.length > 0) {
+    const scoreMap = new Map(feedbackScores.map(f => [f.chunk_id, Number(f.feedback_score)]));
+    for (const chunk of chunks) {
+      const boost = scoreMap.get(chunk.id) || 0;
+      // Apply small boost: up to ±5% of similarity
+      chunk.similarity += chunk.similarity * (boost * 0.05);
+    }
+    // Re-sort after applying feedback boost
+    chunks.sort((a, b) => b.similarity - a.similarity);
+  }
+
+  return chunks;
+}
 
 // Topic mapping for intent-based filtering
 const INTENT_TOPIC_MAP: Record<string, string[]> = {
@@ -26,26 +57,70 @@ export async function retrieveKnowledge(
   huggingfaceKey: string
 ): Promise<KnowledgeChunk[]> {
   // Generate query embedding
-  const embedding = await generateQueryEmbedding(query, huggingfaceKey);
+  const embedding = await generateQueryEmbedding(query, huggingfaceKey, supabase);
 
   // Determine topic filter based on intent
   const topics = INTENT_TOPIC_MAP[intent];
   const filterTopic = topics?.length === 1 ? topics[0] : null;
 
-  // Call the match function
-  const { data, error } = await supabase.rpc('match_knowledge_chunks', {
+  // Detect if query contains Arabic script
+  const isArabicQuery = /[\u0600-\u06FF]/.test(query);
+  // Arabic queries should weight semantic higher since French text search config doesn't tokenize Arabic
+  const semanticWeight = isArabicQuery ? 0.9 : RETRIEVAL_CONFIG.hybrid_alpha;
+
+  // Call hybrid search function
+  const { data, error } = await supabase.rpc('hybrid_match_knowledge', {
     query_embedding: `[${embedding.join(',')}]`,
-    match_threshold: RETRIEVAL_CONFIG.knowledge_threshold,
-    match_count: RETRIEVAL_CONFIG.knowledge_top_k,
+    query_text: query,
+    match_count: RETRIEVAL_CONFIG.knowledge_top_k * 2,  // Fetch more for reranking
     filter_topic: filterTopic,
+    semantic_weight: semanticWeight,
   });
 
   if (error) {
-    console.error('Knowledge retrieval error:', error);
+    console.error(JSON.stringify({
+      error: 'Knowledge retrieval failed',
+      detail: error?.message || String(error),
+      query_preview: query.substring(0, 50),
+      intent,
+    }));
     return [];
   }
 
-  return data || [];
+  const chunks: KnowledgeChunk[] = data || [];
+
+  // Skip reranking for small result sets (not worth the latency)
+  if (chunks.length <= 3) {
+    let topChunks = chunks.slice(0, RETRIEVAL_CONFIG.knowledge_top_k);
+    topChunks = await applyFeedbackBoost(topChunks, supabase);
+    // Dynamic pruning: if at least 2 chunks exceed 0.6 similarity,
+    // drop chunks below 0.6 to reduce noise
+    const highQualityCount = topChunks.filter(c => c.similarity >= 0.6).length;
+    if (highQualityCount >= 2) {
+      const pruned = topChunks.filter(c => c.similarity >= 0.6);
+      console.log(`Dynamic pruning (no rerank): ${topChunks.length} → ${pruned.length} chunks`);
+      return pruned;
+    }
+    return topChunks;
+  }
+
+  // Rerank with cross-encoder for better relevance
+  const reranked = await rerankChunks(query, chunks, huggingfaceKey);
+
+  // Take top-k after reranking
+  let topChunks = reranked.slice(0, RETRIEVAL_CONFIG.knowledge_top_k);
+  topChunks = await applyFeedbackBoost(topChunks, supabase);
+
+  // Dynamic pruning: if at least 2 chunks exceed 0.6 similarity,
+  // drop chunks below 0.6 to reduce noise
+  const highQualityCount = topChunks.filter(c => c.similarity >= 0.6).length;
+  if (highQualityCount >= 2) {
+    const pruned = topChunks.filter(c => c.similarity >= 0.6);
+    console.log(`Dynamic pruning: ${topChunks.length} → ${pruned.length} chunks`);
+    return pruned;
+  }
+
+  return topChunks;
 }
 
 /**
@@ -121,15 +196,18 @@ export async function searchCars(
   if (filters.budget_max) {
     // For budget filtering, we're more lenient (allow up to 20% over)
     // The scoring system will penalize over-budget cars
-    const maxBudgetWithMargin = filters.budget_max * 1.2;
+    const maxBudgetTnd = filters.budget_max * 1.2;
+    const maxBudgetEur = (filters.budget_max / EXCHANGE_RATE.rate) * 1.2;
     query = query.or(
-      `price_tnd.lte.${maxBudgetWithMargin},price_eur.lte.${maxBudgetWithMargin / 3.3}`
+      `and(price_tnd.not.is.null,price_tnd.lte.${maxBudgetTnd}),and(price_eur.not.is.null,price_eur.lte.${maxBudgetEur})`
     );
   }
 
   if (filters.budget_min) {
+    const minBudgetTnd = filters.budget_min;
+    const minBudgetEur = filters.budget_min / EXCHANGE_RATE.rate;
     query = query.or(
-      `price_tnd.gte.${filters.budget_min},price_eur.gte.${filters.budget_min / 3.3}`
+      `and(price_tnd.not.is.null,price_tnd.gte.${minBudgetTnd}),and(price_eur.not.is.null,price_eur.gte.${minBudgetEur})`
     );
   }
 
@@ -152,7 +230,10 @@ export async function searchCars(
   const { data, error } = await query;
 
   if (error) {
-    console.error('Car search error:', error);
+    console.error(JSON.stringify({
+      error: 'Car search failed',
+      detail: error?.message || String(error),
+    }));
     return [];
   }
 

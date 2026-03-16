@@ -13,8 +13,9 @@ export const EMBEDDING_CONFIG = {
 // Retrieval config
 export const RETRIEVAL_CONFIG = {
   knowledge_top_k: 5,
-  knowledge_threshold: 0.4,
+  knowledge_threshold: 0.55,  // was 0.4
   cars_limit: 10,
+  hybrid_alpha: 0.7,  // Semantic weight in hybrid search (0.7 semantic, 0.3 keyword)
 };
 
 // EUR to TND exchange rate (with buffer)
@@ -161,7 +162,15 @@ FORBIDDEN:
 - Long explanations
 - Multiple paragraphs
 - Bullet point lists longer than 3 items
-- Repeating information`,
+- Repeating information
+
+FOLLOW-UP SUGGESTIONS:
+After your response, add 2-3 follow-up questions the user might ask.
+Format each on its own line starting with "Q: "
+Example:
+Q: Quel est le coût total d'importation?
+Q: Cette voiture est-elle éligible FCR?
+Q: Comparer avec un autre modèle?`,
 };
 
 // Off-topic response templates by language

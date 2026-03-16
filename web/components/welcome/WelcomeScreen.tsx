@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Car, HelpCircle, Scale, Zap, Star, ShoppingBag } from 'lucide-react';
 import { LANGUAGE_KEY, UILanguage } from '@/lib/constants';
 
@@ -20,27 +21,27 @@ const faqItems: FAQItem[] = [
     icon: <Car className="w-5 h-5" />,
     title: {
       french: 'Acheter une voiture',
-      arabic: 'شراء سيارة',
-      derja: 'تشري كرهبة',
+      arabic: '\u0634\u0631\u0627\u0621 \u0633\u064a\u0627\u0631\u0629',
+      derja: '\u062a\u0634\u0631\u064a \u0643\u0631\u0647\u0628\u0629',
     },
     description: {
-      french: 'Trouvez la voiture idéale',
-      arabic: 'لقى الكرهبة المثالية',
-      derja: 'لقى الكرهبة اللي تناسبك',
+      french: 'Trouvez la voiture id\u00e9ale',
+      arabic: '\u0644\u0642\u0649 \u0627\u0644\u0643\u0631\u0647\u0628\u0629 \u0627\u0644\u0645\u062b\u0627\u0644\u064a\u0629',
+      derja: '\u0644\u0642\u0649 \u0627\u0644\u0643\u0631\u0647\u0628\u0629 \u0627\u0644\u0644\u064a \u062a\u0646\u0627\u0633\u0628\u0643',
     },
     message: '1',
   },
   {
     icon: <HelpCircle className="w-5 h-5" />,
     title: {
-      french: 'Procédures FCR',
-      arabic: 'إجراءات FCR',
-      derja: 'إجراءات FCR',
+      french: 'Proc\u00e9dures FCR',
+      arabic: '\u0625\u062c\u0631\u0627\u0621\u0627\u062a FCR',
+      derja: '\u0625\u062c\u0631\u0627\u0621\u0627\u062a FCR',
     },
     description: {
-      french: 'Guide des démarches',
-      arabic: 'دليل الإجراءات',
-      derja: 'دليل الإجراءات',
+      french: 'Guide des d\u00e9marches',
+      arabic: '\u062f\u0644\u064a\u0644 \u0627\u0644\u0625\u062c\u0631\u0627\u0621\u0627\u062a',
+      derja: '\u062f\u0644\u064a\u0644 \u0627\u0644\u0625\u062c\u0631\u0627\u0621\u0627\u062a',
     },
     message: '2',
   },
@@ -48,27 +49,27 @@ const faqItems: FAQItem[] = [
     icon: <Scale className="w-5 h-5" />,
     title: {
       french: 'Comparer des voitures',
-      arabic: 'مقارنة السيارات',
-      derja: 'تقارن كراهب',
+      arabic: '\u0645\u0642\u0627\u0631\u0646\u0629 \u0627\u0644\u0633\u064a\u0627\u0631\u0627\u062a',
+      derja: '\u062a\u0642\u0627\u0631\u0646 \u0643\u0631\u0627\u0647\u0628',
     },
     description: {
-      french: 'Comparez deux modèles',
-      arabic: 'قارن بين موديلين',
-      derja: 'قارن بين زوز موديلات',
+      french: 'Comparez deux mod\u00e8les',
+      arabic: '\u0642\u0627\u0631\u0646 \u0628\u064a\u0646 \u0645\u0648\u062f\u064a\u0644\u064a\u0646',
+      derja: '\u0642\u0627\u0631\u0646 \u0628\u064a\u0646 \u0632\u0648\u0632 \u0645\u0648\u062f\u064a\u0644\u0627\u062a',
     },
     message: '3',
   },
   {
     icon: <Zap className="w-5 h-5" />,
     title: {
-      french: 'Véhicules électriques',
-      arabic: 'السيارات الكهربائية',
-      derja: 'الكراهب الكهربائية',
+      french: 'V\u00e9hicules \u00e9lectriques',
+      arabic: '\u0627\u0644\u0633\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629',
+      derja: '\u0627\u0644\u0643\u0631\u0627\u0647\u0628 \u0627\u0644\u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629',
     },
     description: {
       french: 'Infos EV et hybrides',
-      arabic: 'معلومات عن الكهربائية',
-      derja: 'معلومات على الكهربائية',
+      arabic: '\u0645\u0639\u0644\u0648\u0645\u0627\u062a \u0639\u0646 \u0627\u0644\u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629',
+      derja: '\u0645\u0639\u0644\u0648\u0645\u0627\u062a \u0639\u0644\u0649 \u0627\u0644\u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629',
     },
     message: '4',
   },
@@ -76,13 +77,13 @@ const faqItems: FAQItem[] = [
     icon: <ShoppingBag className="w-5 h-5" />,
     title: {
       french: 'Parcourir les offres',
-      arabic: 'تصفح العروض',
-      derja: 'تشوف العروض',
+      arabic: '\u062a\u0635\u0641\u062d \u0627\u0644\u0639\u0631\u0648\u0636',
+      derja: '\u062a\u0634\u0648\u0641 \u0627\u0644\u0639\u0631\u0648\u0636',
     },
     description: {
       french: 'Voir toutes les voitures',
-      arabic: 'شوف كل السيارات',
-      derja: 'شوف الكراهب الكل',
+      arabic: '\u0634\u0648\u0641 \u0643\u0644 \u0627\u0644\u0633\u064a\u0627\u0631\u0627\u062a',
+      derja: '\u0634\u0648\u0641 \u0627\u0644\u0643\u0631\u0627\u0647\u0628 \u0627\u0644\u0643\u0644',
     },
     message: '5',
   },
@@ -90,23 +91,37 @@ const faqItems: FAQItem[] = [
     icon: <Star className="w-5 h-5" />,
     title: {
       french: 'Voitures populaires',
-      arabic: 'السيارات الشعبية',
-      derja: 'الكراهب الشعبية',
+      arabic: '\u0627\u0644\u0633\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u0634\u0639\u0628\u064a\u0629',
+      derja: '\u0627\u0644\u0643\u0631\u0627\u0647\u0628 \u0627\u0644\u0634\u0639\u0628\u064a\u0629',
     },
     description: {
-      french: 'Véhicules subventionnés',
-      arabic: 'السيارات المدعومة',
-      derja: 'الكراهب المدعومة',
+      french: 'V\u00e9hicules subventionn\u00e9s',
+      arabic: '\u0627\u0644\u0633\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u0645\u062f\u0639\u0648\u0645\u0629',
+      derja: '\u0627\u0644\u0643\u0631\u0627\u0647\u0628 \u0627\u0644\u0645\u062f\u0639\u0648\u0645\u0629',
     },
     message: '6',
   },
 ];
 
 const languageOptions: { code: UILanguage; label: string; nativeLabel: string; flag: string }[] = [
-  { code: 'french', label: 'French', nativeLabel: 'Français', flag: '🇫🇷' },
-  { code: 'arabic', label: 'Arabic', nativeLabel: 'العربية', flag: '🇸🇦' },
-  { code: 'derja', label: 'Tunisian', nativeLabel: 'تونسي', flag: '🇹🇳' },
+  { code: 'french', label: 'French', nativeLabel: 'Fran\u00e7ais', flag: '\ud83c\uddeb\ud83c\uddf7' },
+  { code: 'arabic', label: 'Arabic', nativeLabel: '\u0627\u0644\u0639\u0631\u0628\u064a\u0629', flag: '\ud83c\uddf8\ud83c\udde6' },
+  { code: 'derja', label: 'Tunisian', nativeLabel: '\u062a\u0648\u0646\u0633\u064a', flag: '\ud83c\uddf9\ud83c\uddf3' },
 ];
+
+const faqContainerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.06,
+    },
+  },
+};
+
+const faqItemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0 },
+};
 
 export default function WelcomeScreen({ onFAQClick }: WelcomeScreenProps) {
   const [selectedLanguage, setSelectedLanguage] = useState<UILanguage>('french');
@@ -140,14 +155,14 @@ export default function WelcomeScreen({ onFAQClick }: WelcomeScreenProps) {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6 py-8" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Car Icon */}
-      <div className="w-16 h-16 rounded-full bg-accent-light flex items-center justify-center mb-4">
-        <Car className="w-8 h-8 text-accent" />
+      {/* Animated K Logo */}
+      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-accent to-[#1A6FD4] flex items-center justify-center mb-4 k-logo-pulse">
+        <span className="text-2xl font-bold text-white">K</span>
       </div>
 
       {/* Bilingual Welcome Text */}
       <h2 className="text-xl font-semibold text-text-primary mb-2 text-center">
-        Bienvenue sur KarTN | مرحبا بيك في KarTN
+        Bienvenue sur KarTN | \u0645\u0631\u062d\u0628\u0627 \u0628\u064a\u0643 \u0641\u064a KarTN
       </h2>
 
       {/* Bilingual Description - always shown */}
@@ -156,34 +171,50 @@ export default function WelcomeScreen({ onFAQClick }: WelcomeScreenProps) {
           Votre assistant intelligent pour l&apos;importation automobile en Tunisie
         </p>
         <p className="text-text-secondary text-sm" dir="rtl">
-          مساعدك الذكي لاستيراد السيارات في تونس
+          \u0645\u0633\u0627\u0639\u062f\u0643 \u0627\u0644\u0630\u0643\u064a \u0644\u0627\u0633\u062a\u064a\u0631\u0627\u062f \u0627\u0644\u0633\u064a\u0627\u0631\u0627\u062a \u0641\u064a \u062a\u0648\u0646\u0633
         </p>
       </div>
 
       {/* Language Selection */}
-      {!languageSelected && (
-        <div className="w-full max-w-sm mb-6">
-          <p className="text-sm text-text-secondary text-center mb-3 font-medium">
-            Choisir la langue | اختار اللغة
-          </p>
-          <div className="flex gap-2 justify-center">
-            {languageOptions.map((lang) => (
-              <button
-                key={lang.code}
-                onClick={() => handleLanguageSelect(lang.code)}
-                className={`px-4 py-2 rounded-lg border transition-all flex items-center gap-2
-                  ${selectedLanguage === lang.code
-                    ? 'border-accent bg-accent text-white'
-                    : 'border-white/10 bg-bg-secondary hover:border-accent/30 hover:bg-bg-elevated text-text-primary'
-                  }`}
-              >
-                <span>{lang.flag}</span>
-                <span>{lang.nativeLabel}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {!languageSelected && (
+          <motion.div
+            key="language-selector"
+            className="w-full max-w-sm mb-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25 }}
+          >
+            <p className="text-sm text-text-secondary text-center mb-3 font-medium">
+              Choisir la langue | \u0627\u062e\u062a\u0627\u0631 \u0627\u0644\u0644\u063a\u0629
+            </p>
+            <div className="flex gap-2 justify-center relative bg-[var(--bg-secondary)] rounded-full p-1 border border-[var(--border-subtle)]">
+              {languageOptions.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => handleLanguageSelect(lang.code)}
+                  className={`relative px-4 py-2.5 rounded-full transition-colors flex items-center gap-2 z-10
+                    ${selectedLanguage === lang.code
+                      ? 'text-white'
+                      : 'text-text-secondary hover:text-text-primary'
+                    }`}
+                >
+                  {selectedLanguage === lang.code && (
+                    <motion.div
+                      layoutId="language-pill"
+                      className="absolute inset-0 bg-gradient-to-r from-accent to-[#1A6FD4] rounded-full"
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                    />
+                  )}
+                  <span className="relative z-10">{lang.flag}</span>
+                  <span className="relative z-10 text-sm font-medium">{lang.nativeLabel}</span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Language indicator when already selected */}
       {languageSelected && (
@@ -193,56 +224,71 @@ export default function WelcomeScreen({ onFAQClick }: WelcomeScreenProps) {
         >
           <span>{languageOptions.find(l => l.code === selectedLanguage)?.flag}</span>
           <span>{languageOptions.find(l => l.code === selectedLanguage)?.nativeLabel}</span>
-          <span>▼</span>
+          <span className="text-[10px]">\u25bc</span>
         </button>
       )}
 
       {/* FAQ Section - show after language selection */}
-      {languageSelected && (
-        <>
+      <AnimatePresence mode="wait">
+        {languageSelected && (
+          <motion.div
+            key="faq-section"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="w-full max-w-sm">
+              <h3 className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-3 text-center">
+                {selectedLanguage === 'french' && 'Comment puis-je vous aider?'}
+                {selectedLanguage === 'arabic' && '\u0643\u064a\u0641 \u0646\u0642\u062f\u0631 \u0646\u0633\u0627\u0639\u062f\u0643\u061f'}
+                {selectedLanguage === 'derja' && '\u0643\u064a\u0641\u0627\u0634 \u0646\u0639\u0627\u0648\u0646\u0643\u061f'}
+              </h3>
 
-          <div className="w-full max-w-sm">
-            <h3 className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-3 text-center">
-              {selectedLanguage === 'french' && 'Comment puis-je vous aider?'}
-              {selectedLanguage === 'arabic' && 'كيف نقدر نساعدك؟'}
-              {selectedLanguage === 'derja' && 'كيفاش نعاونك؟'}
-            </h3>
-
-            <div className="grid grid-cols-2 gap-2">
-              {faqItems.map((item, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleFAQClick(item)}
-                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-bg-secondary
-                           border border-white/10 hover:border-accent/30 hover:bg-bg-elevated
-                           transition-all text-center group"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-accent-light
-                                flex items-center justify-center text-accent
-                                group-hover:bg-accent group-hover:text-white transition-colors">
-                    {item.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-text-primary truncate">
-                      {item.title[selectedLanguage]}
-                    </p>
-                    <p className="text-xs text-text-secondary truncate">
-                      {item.description[selectedLanguage]}
-                    </p>
-                  </div>
-                </button>
-              ))}
+              <motion.div
+                className="grid grid-cols-2 gap-2"
+                variants={faqContainerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {faqItems.map((item, index) => (
+                  <motion.button
+                    key={index}
+                    onClick={() => handleFAQClick(item)}
+                    variants={faqItemVariants}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-[var(--bg-secondary)]
+                             border border-[var(--border-subtle)] hover:border-accent/40
+                             transition-all text-center group"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-accent-light
+                                  flex items-center justify-center text-accent
+                                  group-hover:bg-accent group-hover:text-white transition-colors">
+                      {item.icon}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-text-primary truncate">
+                        {item.title[selectedLanguage]}
+                      </p>
+                      <p className="text-xs text-text-secondary truncate">
+                        {item.description[selectedLanguage]}
+                      </p>
+                    </div>
+                  </motion.button>
+                ))}
+              </motion.div>
             </div>
-          </div>
 
-          {/* Bottom prompt */}
-          <p className="text-xs text-text-secondary mt-6 text-center">
-            {selectedLanguage === 'french' && "Posez n'importe quelle question"}
-            {selectedLanguage === 'arabic' && 'اسأل أي سؤال تحب'}
-            {selectedLanguage === 'derja' && 'اسأل أي سؤال تحب'}
-          </p>
-        </>
-      )}
+            {/* Bottom prompt */}
+            <p className="text-xs text-text-secondary mt-6 text-center">
+              {selectedLanguage === 'french' && "Posez n'importe quelle question"}
+              {selectedLanguage === 'arabic' && '\u0627\u0633\u0623\u0644 \u0623\u064a \u0633\u0624\u0627\u0644 \u062a\u062d\u0628'}
+              {selectedLanguage === 'derja' && '\u0627\u0633\u0623\u0644 \u0623\u064a \u0633\u0624\u0627\u0644 \u062a\u062d\u0628'}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

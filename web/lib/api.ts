@@ -1,5 +1,5 @@
 import { ChatRequest, ChatResponse } from '@/types';
-import { CHAT_ENDPOINT, RECOMMEND_ENDPOINT } from './constants';
+import { CHAT_ENDPOINT, RECOMMEND_ENDPOINT, SUPABASE_URL } from './constants';
 
 export async function sendMessage(request: ChatRequest): Promise<ChatResponse> {
   const response = await fetch(CHAT_ENDPOINT, {
@@ -61,4 +61,48 @@ export async function fetchRecommendations(request: RecommendRequest): Promise<R
 
 export function generateMessageId(): string {
   return `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
+
+export async function sendFeedback(messageId: string, rating: -1 | 1, reason?: string): Promise<void> {
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/feedback`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      message_id: messageId,
+      rating,
+      reason,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Feedback API error: ${response.status}`);
+  }
+}
+
+const FAVORITES_ENDPOINT = `${SUPABASE_URL}/functions/v1/favorites`;
+
+export async function addFavorite(conversationId: string, carId: string): Promise<void> {
+  const response = await fetch(FAVORITES_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ conversation_id: conversationId, car_id: carId }),
+  });
+  if (!response.ok) throw new Error(`Favorites API error: ${response.status}`);
+}
+
+export async function removeFavorite(conversationId: string, carId: string): Promise<void> {
+  const response = await fetch(FAVORITES_ENDPOINT, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ conversation_id: conversationId, car_id: carId }),
+  });
+  if (!response.ok) throw new Error(`Favorites API error: ${response.status}`);
+}
+
+export async function getFavorites(conversationId: string): Promise<{ favorites: Array<{ id: string; car_id: string; cars: unknown }> }> {
+  const response = await fetch(`${FAVORITES_ENDPOINT}?conversation_id=${conversationId}`);
+  if (!response.ok) throw new Error(`Favorites API error: ${response.status}`);
+  return response.json();
 }

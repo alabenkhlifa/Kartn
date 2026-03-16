@@ -8,14 +8,19 @@
   --accent-hover: #1A7AEE;
   --accent-light: rgba(45, 140, 255, 0.12);
 
-  /* Background - Dark gray theme */
-  --bg-primary: #1E1E1E;
-  --bg-secondary: #2A2A2A;
-  --bg-elevated: #353535;
+  /* Background - Deep dark theme with blue tint */
+  --bg-primary: #0F0F14;
+  --bg-secondary: #1A1A24;
+  --bg-elevated: #24243A;
+  --bg-surface: #1E1E30;
 
   /* Text */
-  --text-primary: #FFFFFF;
-  --text-secondary: #B0B0B0;
+  --text-primary: #F0F0F5;
+  --text-secondary: #8E8EA0;
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-medium: rgba(255, 255, 255, 0.12);
 
   /* Status */
   --success: #10B981;
@@ -87,8 +92,57 @@ body {
   color: #FFFFFF;
 }
 
+/* K logo pulse animation */
+@keyframes k-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(45, 140, 255, 0.3), 0 0 40px rgba(45, 140, 255, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(45, 140, 255, 0.5), 0 0 60px rgba(45, 140, 255, 0.2);
+  }
+}
+
+.k-logo-pulse {
+  animation: k-pulse 3s ease-in-out infinite;
+}
+
+/* Typing indicator wave */
+@keyframes typing-wave {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+.typing-dot {
+  animation: typing-wave 1.4s ease-in-out infinite;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .k-logo-pulse {
+    animation: none;
+  }
+
+  .typing-dot {
+    animation: none;
+    opacity: 0.6;
   }
 }

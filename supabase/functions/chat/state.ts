@@ -16,6 +16,39 @@ export async function getOrCreateConversation(
       .single();
 
     if (!error && data) {
+      // Check for stale conversation (>30min old in asking_* state)
+      const updatedAt = new Date(data.updated_at);
+      const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000);
+      const isStale = updatedAt < thirtyMinAgo && (data.state as string).startsWith('asking_');
+
+      if (isStale) {
+        // Reset stale conversation
+        await supabase
+          .from('conversations')
+          .update({ state: 'goal_selection', goal: null, car_origin: null, residency: null, fcr_famille: false, fuel_preference: null, car_type_preference: null, condition_preference: null, budget_tnd: null })
+          .eq('id', data.id);
+
+        return {
+          id: data.id,
+          state: 'goal_selection' as ConversationState,
+          goal: null,
+          car_origin: null,
+          residency: null,
+          fcr_famille: false,
+          fuel_preference: null,
+          car_type_preference: null,
+          condition_preference: null,
+          budget_tnd: null,
+          language: (data.language || 'french') as Language,
+          calc_price_eur: null,
+          calc_engine_cc: null,
+          calc_fuel_type: null as CalcFuelType | null,
+          selected_procedure: null as ProcedureType | null,
+          selected_ev_topic: null as EVTopic | null,
+          comparison_query: null,
+        };
+      }
+
       return {
         id: data.id,
         state: data.state as ConversationState,
@@ -254,6 +287,97 @@ export function getNextState(
     default:
       return 'goal_selection';
   }
+}
+
+/**
+ * Get the previous state for backtracking.
+ * Returns the previous state and the field to clear.
+ */
+export function getPreviousState(
+  currentState: ConversationState,
+  conversation: { car_origin?: string | null; goal?: string | null }
+): { state: ConversationState; clearField: string | null } | null {
+  const isTunisiaFlow = conversation.car_origin === 'tunisia';
+
+  switch (currentState) {
+    case 'asking_car_origin':
+      return { state: 'goal_selection', clearField: 'car_origin' };
+
+    case 'asking_residency':
+      return { state: 'asking_car_origin', clearField: 'residency' };
+
+    case 'asking_fcr_famille':
+      return { state: 'asking_residency', clearField: 'fcr_famille' };
+
+    case 'asking_fuel_type':
+      if (isTunisiaFlow) {
+        return { state: 'asking_budget', clearField: 'fuel_preference' };
+      }
+      // Import flow: fuel comes after residency or fcr_famille
+      return { state: 'asking_residency', clearField: 'fuel_preference' };
+
+    case 'asking_car_type':
+      return { state: 'asking_fuel_type', clearField: 'car_type_preference' };
+
+    case 'asking_condition':
+      if (isTunisiaFlow) {
+        return { state: 'asking_car_origin', clearField: 'condition_preference' };
+      }
+      return { state: 'asking_car_type', clearField: 'condition_preference' };
+
+    case 'asking_budget':
+      if (isTunisiaFlow) {
+        return { state: 'asking_condition', clearField: 'budget_tnd' };
+      }
+      return { state: 'asking_condition', clearField: 'budget_tnd' };
+
+    // Calculator flow
+    case 'asking_calc_price':
+      return { state: 'goal_selection', clearField: 'calc_price_eur' };
+    case 'asking_calc_engine':
+      return { state: 'asking_calc_price', clearField: 'calc_engine_cc' };
+    case 'asking_calc_fuel':
+      return { state: 'asking_calc_engine', clearField: 'calc_fuel_type' };
+
+    default:
+      return null;
+  }
+}
+
+/**
+ * Get the first unanswered state in the wizard flow.
+ * Used when filters are pre-populated from natural language input.
+ */
+export function getFirstUnansweredState(
+  conversation: Conversation
+): ConversationState {
+  const isTunisiaFlow = conversation.car_origin === 'tunisia';
+  const isImportFlow = conversation.car_origin === 'abroad';
+
+  // Check car origin
+  if (!conversation.car_origin) return 'asking_car_origin';
+
+  if (isTunisiaFlow) {
+    // Tunisia flow: car_origin → condition → budget → fuel → car_type → cars
+    if (!conversation.condition_preference) return 'asking_condition';
+    if (!conversation.budget_tnd) return 'asking_budget';
+    if (!conversation.fuel_preference) return 'asking_fuel_type';
+    if (!conversation.car_type_preference) return 'asking_car_type';
+    return 'showing_cars';
+  }
+
+  if (isImportFlow) {
+    // Import flow: car_origin → residency → fcr_famille (if local) → fuel → car_type → condition → budget → cars
+    if (!conversation.residency) return 'asking_residency';
+    if (conversation.residency === 'local' && !conversation.fcr_famille) return 'asking_fcr_famille';
+    if (!conversation.fuel_preference) return 'asking_fuel_type';
+    if (!conversation.car_type_preference) return 'asking_car_type';
+    if (!conversation.condition_preference) return 'asking_condition';
+    if (!conversation.budget_tnd) return 'asking_budget';
+    return 'showing_cars';
+  }
+
+  return 'asking_car_origin';
 }
 
 /**

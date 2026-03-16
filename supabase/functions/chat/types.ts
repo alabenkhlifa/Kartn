@@ -198,6 +198,7 @@ export interface ChatRequest {
   message: string;
   conversation_id?: string;
   language?: Language;
+  stream?: boolean;
   user_context?: {
     residency_status?: 'tre' | 'resident';
     years_abroad?: number;
@@ -214,6 +215,8 @@ export interface ChatResponse {
   calculation?: TaxBreakdown | FCRComparison;
   conversation_id?: string;
   state?: ConversationState;
+  message_id?: string;
+  suggestions?: string[];
 }
 
 // Groq API types

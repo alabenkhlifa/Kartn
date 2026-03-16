@@ -78,8 +78,8 @@ describe('Popular Cars - Eligibility Results', () => {
       conversation_id: conversationId,
     });
 
-    // Should transition back to goal_selection and show eligible result
-    assertChatState(response, 'goal_selection');
+    // Should transition to showing_popular_models with yes/no prompt
+    assertChatState(response, 'showing_popular_models');
     assertMessageContains(response, '✅', 'Response should show eligible emoji');
     // Response should indicate eligibility
     assert(
@@ -105,9 +105,45 @@ describe('Popular Cars - Eligibility Results', () => {
       conversation_id: conversationId,
     });
 
-    // Should transition back to goal_selection and show eligible result
-    assertChatState(response, 'goal_selection');
+    // Should transition to showing_popular_models with yes/no prompt
+    assertChatState(response, 'showing_popular_models');
     assertMessageContains(response, '✅', 'Response should show eligible emoji for couple income');
+  });
+
+  it('should transition to car search after eligible + yes', async () => {
+    const conversationId = await getPopularCarsState();
+
+    // Go to eligibility check
+    await chatApi.send({ message: '1', conversation_id: conversationId });
+
+    // Select eligible salary
+    await chatApi.send({ message: '1', conversation_id: conversationId });
+
+    // Say yes to search for a car
+    const response = await chatApi.send({
+      message: '1',
+      conversation_id: conversationId,
+    });
+
+    assertChatState(response, 'asking_car_origin');
+  });
+
+  it('should return to menu after eligible + no', async () => {
+    const conversationId = await getPopularCarsState();
+
+    // Go to eligibility check
+    await chatApi.send({ message: '1', conversation_id: conversationId });
+
+    // Select eligible salary
+    await chatApi.send({ message: '1', conversation_id: conversationId });
+
+    // Say no
+    const response = await chatApi.send({
+      message: '2',
+      conversation_id: conversationId,
+    });
+
+    assertChatState(response, 'goal_selection');
   });
 
   it('should show not eligible result for salary > 1500 TND (option 3)', async () => {
@@ -292,15 +328,29 @@ describe('Popular Cars - Arabic Language', () => {
 // ============================================================================
 
 describe('Popular Cars - Full Flows', () => {
-  it('should complete eligibility check → eligible flow', async () => {
+  it('should complete eligibility check → eligible → car search flow', async () => {
     const responses = await runConversationFlow([
       'Bonjour',  // goal_selection
       '6',        // popular_cars → popular_cars_selection
       '1',        // eligibility → asking_popular_eligibility
-      '1',        // eligible → goal_selection
+      '1',        // eligible → showing_popular_models
+      '1',        // yes → asking_car_origin
     ]);
 
-    assertChatState(responses[3], 'goal_selection');
+    assertChatState(responses[3], 'showing_popular_models');
+    assertChatState(responses[4], 'asking_car_origin');
+  });
+
+  it('should complete eligibility check → eligible → menu flow', async () => {
+    const responses = await runConversationFlow([
+      'Bonjour',  // goal_selection
+      '6',        // popular_cars → popular_cars_selection
+      '1',        // eligibility → asking_popular_eligibility
+      '1',        // eligible → showing_popular_models
+      '2',        // no → goal_selection
+    ]);
+
+    assertChatState(responses[4], 'goal_selection');
   });
 
   it('should complete eligibility check → not eligible flow', async () => {

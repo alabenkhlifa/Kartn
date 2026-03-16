@@ -5,7 +5,11 @@
     "test:integration": "deno test --allow-net --allow-env integration/",
     "test:e2e": "deno test --allow-net --allow-env e2e/",
     "test:chat": "deno test --allow-net --allow-env --allow-read **/chat/*.test.ts",
-    "test:recommend": "deno test --allow-net --allow-env --allow-read **/recommend/*.test.ts"
+    "test:recommend": "deno test --allow-net --allow-env --allow-read **/recommend/*.test.ts",
+    "agent:validate": "deno run --allow-net --allow-read --allow-write agent/cli.ts validate",
+    "agent:generate": "deno run --allow-net --allow-read --allow-write agent/cli.ts generate",
+    "agent:iterate": "deno run --allow-net --allow-read --allow-write agent/cli.ts iterate",
+    "agent:list": "deno run --allow-read agent/cli.ts list"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.0",

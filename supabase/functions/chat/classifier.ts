@@ -1,8 +1,7 @@
 import { MODELS, SYSTEM_PROMPTS } from './config.ts';
+import { getLLMProvider, getFallbackProvider } from './providers/factory.ts';
 import {
   ClassificationResult,
-  GroqChatRequest,
-  GroqChatResponse,
   Intent,
   Language,
 } from './types.ts';
@@ -22,7 +21,7 @@ function detectLanguageFromScript(message: string): Language | null {
   if (/[\u0600-\u06FF]/.test(message)) {
     // Derja-specific patterns (Tunisian dialect)
     // Common Derja words and phrases that distinguish it from MSA
-    const derjaPatterns = /أحكيلي|برّا|تشري|كرهبة|ما\s*يهمش|شنوة|كيفاش|وين|شكون|باهي|برشا|يزي|توا|موش|عندي|نحب|فيسع|صحيت|لازم/;
+    const derjaPatterns = /أحكيلي|برّا|تشري|كرهبة|ما\s*يهمش|شنوة|كيفاش|وين|شكون|باهي|برشا|يزي|توا|موش|عندي|نحب|فيسع|صحيت|لازم|هاذي|هاذا|متاع|متاعي|تحب|فيها|عليها|هكا|هكاكا|خويا|نشري|إيه|ما عنديش|يا خويا|ياسر|شنية|فلوس|بالحق|خاطر/;
     if (derjaPatterns.test(message)) {
       return 'derja';
     }
@@ -41,39 +40,31 @@ export async function classifyQuery(
   // First, check for Arabic script - this is more reliable than API for language detection
   const scriptLanguage = detectLanguageFromScript(message);
 
-  const request: GroqChatRequest = {
-    model: MODELS.classifier,
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPTS.classifier },
-      { role: 'user', content: message },
-    ],
-    temperature: 0.1, // Low temperature for consistent classification
-    max_tokens: 500,
-    response_format: { type: 'json_object' },
-  };
-
   try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${groqApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('Groq classification error:', error);
-      // Use script-detected language if available
-      if (scriptLanguage) {
-        return { ...DEFAULT_CLASSIFICATION, language: scriptLanguage, confidence: 0.9 };
+    const provider = getLLMProvider();
+    const fallback = getFallbackProvider();
+    const chatOptions = {
+      model: MODELS.classifier,
+      messages: [
+        { role: 'system' as const, content: SYSTEM_PROMPTS.classifier },
+        { role: 'user' as const, content: message },
+      ],
+      temperature: 0.1,
+      max_tokens: 500,
+      response_format: { type: 'json_object' as const },
+    };
+    const completion = await (async () => {
+      try {
+        return await provider.chat(chatOptions);
+      } catch (err) {
+        if (fallback) {
+          console.error(JSON.stringify({ error: 'Primary LLM failed for classification, trying fallback', detail: err instanceof Error ? err.message : String(err) }));
+          return await fallback.chat(chatOptions);
+        }
+        throw err;
       }
-      return DEFAULT_CLASSIFICATION;
-    }
-
-    const data: GroqChatResponse = await response.json();
-    const content = data.choices[0]?.message?.content;
+    })();
+    const content = completion.content;
 
     if (!content) {
       // Use script-detected language if available
@@ -129,7 +120,11 @@ export async function classifyQuery(
 
     return result;
   } catch (error) {
-    console.error('Classification error:', error);
+    console.error(JSON.stringify({
+      error: 'Classification failed',
+      detail: error instanceof Error ? error.message : String(error),
+      message_preview: message.substring(0, 50),
+    }));
     // Use script-detected language if available
     if (scriptLanguage) {
       return { ...DEFAULT_CLASSIFICATION, language: scriptLanguage, confidence: 0.9 };

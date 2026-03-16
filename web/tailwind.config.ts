@@ -15,16 +15,22 @@ const config: Config = {
           hover: "#1A7AEE",
           light: "#2D8CFF20",
         },
-        // Background - Dark gray theme
+        // Background - Deep dark with blue tint
         bg: {
-          primary: "#1E1E1E",
-          secondary: "#2A2A2A",
-          elevated: "#353535",
+          primary: "#0F0F14",
+          secondary: "#1A1A24",
+          elevated: "#24243A",
+          surface: "#1E1E30",
         },
         // Text
         text: {
-          primary: "#FFFFFF",
-          secondary: "#B0B0B0",
+          primary: "#F0F0F5",
+          secondary: "#8E8EA0",
+        },
+        // Borders
+        border: {
+          subtle: "rgba(255, 255, 255, 0.06)",
+          medium: "rgba(255, 255, 255, 0.12)",
         },
         // Status
         success: "#10B981",

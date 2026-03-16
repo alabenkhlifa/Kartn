@@ -112,6 +112,7 @@ export interface ChatRequest {
   message: string;
   conversation_id?: string;
   language?: Language;
+  stream?: boolean;
   user_context?: {
     residency_status?: 'tre' | 'resident';
     years_abroad?: number;
@@ -127,6 +128,9 @@ export interface ChatResponse {
   cars?: ScoredCarResult[];
   calculation?: TaxBreakdown | FCRComparison;
   conversation_id?: string;
+  state?: ConversationState;
+  message_id?: string;
+  suggestions?: string[];
 }
 
 // UI-specific types
@@ -137,6 +141,10 @@ export interface Message {
   timestamp: Date;
   cars?: ScoredCarResult[];
   calculation?: TaxBreakdown | FCRComparison;
+  state?: ConversationState;
+  message_id?: string;
+  suggestions?: string[];
+  error?: boolean;
 }
 
 export interface ParsedOption {
